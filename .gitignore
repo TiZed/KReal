@@ -1,0 +1,17 @@
+# Ignore .bak files
+*bak
+
+# Ignore .raw simulation file
+*.raw
+
+# Ignore autosave
+_autosave*
+
+# ignore some MPLABX stuff
+build
+debug
+firmware/nbproject/
+
+# ignore production zip files
+*.zip
+
