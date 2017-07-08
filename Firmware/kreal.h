@@ -34,6 +34,8 @@ extern "C" {
 
 #define FLASH_SPEED_HZ          30000000 //Max Flash speed
 #define PB_BUS_MAX_FREQ_HZ      80000000 //Max Peripheral bus speed
+    
+#define BUFFER_SIZE     (50)
 
 // Commands
 #define CMD_CFG     0x47464323    // #CFG

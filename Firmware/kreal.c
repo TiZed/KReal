@@ -99,8 +99,8 @@ static const uint32_t num_pwms = sizeof(pwms) / sizeof(pwm_t *) ;
 
 volatile cnc_flags_t flags = {0} ;
 
-BUFFER(rxb, 50) ;
-BUFFER(txb, 50) ;
+BUFFER(rxb, BUFFER_SIZE) ;
+BUFFER(txb, BUFFER_SIZE) ;
 
 static uint32_t checksum = 0 ;
 static uint32_t cmd = CMD_NUL ;
@@ -136,6 +136,47 @@ static void config_spi() {
     
     // Enable SPI
     SPI2CONbits.ON = 1 ;
+}
+
+static void dma_setup() {
+    IEC1bits.DMA0IE = 0 ;       // Disable DMA Ch. 0 Interrupt
+    IEC1bits.DMA1IE = 0 ;       // Disable DMA Ch. 1 Interrupt
+    IFS1bits.DMA0IF = 0 ;       // Clear and DMA Ch. 0 pending interrupts
+    IFS1bits.DMA1IF = 0 ;       // Clear and DMA Ch. 1 pending interrupts
+    
+    DMACONbits.ON = 1 ;         // Turn DMA controller on
+    
+    // Configure DMA Channel 0
+    DCH0CONbits.CHEN = 0 ;      // Disable DMA Ch. 0
+    DCH0CONbits.CHPRI = 3 ;     // DMA Ch. 0 set high priority (3)
+    DCH0CONbits.CHAEN = 1 ;     // DMA Ch. 0 automatic open
+    
+    DCH0ECONbits.CHSIRQ = _SPI2_RX_IRQ ; // Set DMA Ch. 0 start IRQ from SPI2 Rx
+    DCH0ECONbits.SIRQEN = 1 ;            // Enable DMA Ch. 0 start from IRQ
+    
+    DCH0SSA = (void *) &SPI2BUF ;       // DMA Ch. 0 source address is SPI2 Buffer
+    DCH0DSA = (void *) rxb.data ;       // DMA Ch. 0 destination address is RX buffer
+    
+    DCH0SSIZ = 1 ;                      // 1B source size (SPI2BUF)
+    DCH0DSIZ = BUFFER_SIZE ;            // destination size is the buffer length
+    DCH0CSIZ = 1 ;                      // Set cell transfer to 1B
+    
+    // Configure DMA Channel 1
+    DCH1CONbits.CHEN = 0 ;      // Disable DMA Ch. 1
+    DCH1CONbits.CHPRI = 3 ;     // DMA Ch. 1 set high priority (3)
+    DCH1CONbits.CHAEN = 1 ;     // DMA Ch. 1 automatic open
+    
+    DCH1ECONbits.CHSIRQ = _SPI2_TX_IRQ ; // Set DMA Ch. 1 start IRQ from SPI2 Tx
+    DCH1ECONbits.SIRQEN = 1 ;            // Enable DMA Ch. 1 start from IRQ
+    
+    DCH1SSA = (void *) txb.data ;       // DMA Ch. 1 source address is the TX buffer
+    DCH1DSA = (void *) &SPI2BUF ;       // DMA Ch. 0 destination address SPI2BUF
+    
+    DCH1SSIZ = BUFFER_SIZE ;            // destination size is the buffer length
+    DCH1DSIZ = 1 ;                      // 1B source size (SPI2BUF)
+    DCH1CSIZ = 1 ;                      // Set cell transfer to 1B
+    
+    
 }
 
 

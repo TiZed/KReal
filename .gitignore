@@ -10,7 +10,7 @@ _autosave*
 # ignore some MPLABX stuff
 build
 debug
-firmware/nbproject/
+nbproject
 
 # ignore production zip files
 *.zip
