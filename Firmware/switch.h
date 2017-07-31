@@ -65,7 +65,7 @@ typedef struct {
     volatile unsigned int *port ;
     volatile unsigned int *tris_set ;
     uint32_t pin ;
-    uint32_t cn_number ;
+    int32_t cn_number ;
     uint32_t pullup ;
 } switch_t ;
 

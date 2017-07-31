@@ -104,6 +104,7 @@ BUFFER(txb, BUFFER_SIZE) ;
 
 static uint32_t checksum = 0 ;
 static uint32_t cmd = CMD_NUL ;
+static uint32_t spi_done = 0 ;
 static uint32_t pos_send_count = 0 ;
 
 // Configure SPI 2
@@ -116,29 +117,31 @@ static void config_spi() {
     SPI2CONbits.CKE = 1 ;           // Clock edge select
     SPI2CONbits.MSTEN = 0 ;
     SPI2CONbits.SSEN = 0 ;
+    SPI2CONbits.ENHBUF = 1 ;        // Enable Enhanced buffer
     t = SPI2BUF ;                   // Clear buffer
     
     // SPI Interrupt priority 2, sub-priority 0
-    IPC7bits.SPI2IP = 6 ;
-    IPC7bits.SPI2IS = 0 ;
+//    IPC7bits.SPI2IP = 6 ;
+//    IPC7bits.SPI2IS = 0 ;
     
     // Clear RX overflow flag
     SPI2STATbits.SPIROV = 0 ;
     
-    // Clear interrupt flags and enable SPI interrupt
+    // Clear SPI interrupt flags 
     IFS1bits.SPI2RXIF = 0 ;
     IFS1bits.SPI2TXIF = 0 ;
     IFS1bits.SPI2EIF = 0 ;
     
+    // Enable SPI Rx interrupt
     IEC1bits.SPI2TXIE = 1 ;
-    IEC1bits.SPI2RXIE = 1 ;
+    IEC1bits.SPI2RXIE = 0 ;
     IEC1bits.SPI2EIE = 0 ;
     
     // Enable SPI
     SPI2CONbits.ON = 1 ;
 }
 
-static void dma_setup() {
+static void dma_setup(uint size) {
     IEC1bits.DMA0IE = 0 ;       // Disable DMA Ch. 0 Interrupt
     IEC1bits.DMA1IE = 0 ;       // Disable DMA Ch. 1 Interrupt
     IFS1bits.DMA0IF = 0 ;       // Clear and DMA Ch. 0 pending interrupts
@@ -146,7 +149,7 @@ static void dma_setup() {
     
     DMACONbits.ON = 1 ;         // Turn DMA controller on
     
-    // Configure DMA Channel 0
+    // Configure DMA Channel 0 for SPI Rx
     DCH0CONbits.CHEN = 0 ;      // Disable DMA Ch. 0
     DCH0CONbits.CHPRI = 3 ;     // DMA Ch. 0 set high priority (3)
     DCH0CONbits.CHAEN = 1 ;     // DMA Ch. 0 automatic open
@@ -157,11 +160,11 @@ static void dma_setup() {
     DCH0SSA = (void *) &SPI2BUF ;       // DMA Ch. 0 source address is SPI2 Buffer
     DCH0DSA = (void *) rxb.data ;       // DMA Ch. 0 destination address is RX buffer
     
-    DCH0SSIZ = 1 ;                      // 1B source size (SPI2BUF)
-    DCH0DSIZ = BUFFER_SIZE ;            // destination size is the buffer length
-    DCH0CSIZ = 1 ;                      // Set cell transfer to 1B
+    DCH0SSIZ = 4 ;                      // 1B source size (SPI2BUF)
+    DCH0DSIZ = size ;                   // destination size 
+    DCH0CSIZ = 4 ;                      // Set cell transfer to 1B
     
-    // Configure DMA Channel 1
+    // Configure DMA Channel 1 for SPI Tx
     DCH1CONbits.CHEN = 0 ;      // Disable DMA Ch. 1
     DCH1CONbits.CHPRI = 3 ;     // DMA Ch. 1 set high priority (3)
     DCH1CONbits.CHAEN = 1 ;     // DMA Ch. 1 automatic open
@@ -172,11 +175,9 @@ static void dma_setup() {
     DCH1SSA = (void *) txb.data ;       // DMA Ch. 1 source address is the TX buffer
     DCH1DSA = (void *) &SPI2BUF ;       // DMA Ch. 0 destination address SPI2BUF
     
-    DCH1SSIZ = BUFFER_SIZE ;            // destination size is the buffer length
-    DCH1DSIZ = 1 ;                      // 1B source size (SPI2BUF)
-    DCH1CSIZ = 1 ;                      // Set cell transfer to 1B
-    
-    
+    DCH1SSIZ = size ;                   // destination size 
+    DCH1DSIZ = 4 ;                      // 1B source size (SPI2BUF)
+    DCH1CSIZ = 4 ;                      // Set cell transfer to 1B
 }
 
 
@@ -191,8 +192,8 @@ void config_switches() {
         // Set pin as input
         *(switches[i]->tris_set) = switches[i]->pin ;
         
-        // Pins with CN 99 have no CN
-        if (switches[i]->cn_number < 99) {
+        // Pins with CN -1 have no CN
+        if (switches[i]->cn_number != -1) {
             // Enable CN for pin
             cn_num = 1 << switches[i]->cn_number ;
             CNENSET = cn_num ;
@@ -312,148 +313,180 @@ int main(void) {
     WDTCONbits.ON = 1 ;
     
     while (1) {
-        cmd = pop(&rxb) ;
         WDTCONSET = 1 ;
-
-        switch(cmd) {
-        // Configure command: configure frequency and axes
-        case CMD_CFG:
-            IEC0bits.CTIE = 0 ;
-//            checksum = cmd ; 
-
-            base_freq = pop_wait(&rxb) ;
-//            checksum ^= base_freq ;
-
-            num_active_axes = pop_wait(&rxb) ;
-//            checksum ^= num_active_axes ;
-            
-            num_active_pwm = pop_wait(&rxb) ;
-//            checksum ^= num_active_pwm ;
-
-            for(i = 0 ; i < num_active_axes ; i++) {
-                axis = pop_wait(&rxb) ;
-//                checksum ^= axis ;
-
-                active_axes_mask |= axis ;
-                axis = get_axis_ind(axis, axes_mask) ;
-                active_axes[i] = axis ;
-
-                axes_arr[axis]->step_len = pop_wait(&rxb) ;
-//                checksum ^= axes_arr[axis]->step_len ;
-
-                axes_arr[axis]->step_space = pop_wait(&rxb) ;
-//                checksum ^= axes_arr[axis]->step_space ;
-
-                axes_arr[axis]->dir_setup = pop_wait(&rxb) ; 
-                axes_arr[axis]->dir_counter = 0 ;
-//                checksum ^= axes_arr[axis]->dir_setup ;
-
-                axes_arr[axis]->dir_hold = pop_wait(&rxb) ;
-//                checksum ^= axes_arr[axis]->dir_hold ;
-
-                // Activate axis (rise enable)
-                axis_activate(axes_arr[axis]) ;
-            }
-            
-            active_axes[i] = -1 ;
-            
-            for(i = 0 ; i < num_active_pwm ; i++) {
-                pwms[i]->frequency = pop_wait(&rxb) ;
-//                checksum ^= pwms[i]->frequency ;
-                
-                pwm_activate(pwms[i]) ;
-            }
-            
-            SPI2BUF = checksum ;
-            checksum = 0 ;
-            
-            pos_send_count = 2 * num_active_axes + 2 ;
-
-            // Set core timer compare ticks to selected pulse
-            // generation base frequency
-            if (base_freq > 0) {
-                core_count = CORE_TIMER_FREQ / base_freq ;
-
-                if(core_count > 0) {
-                    int_store = disableInterrupts() ;
-                    _CP0_SET_COUNT(0) ;
-                    _CP0_SET_COMPARE(core_count) ;
-                    _CP0_BIC_CAUSE(_CP0_CAUSE_DC_MASK) ;
-                    restoreInterrupts(int_store) ;
-                    
-                    IFS0bits.CTIF = 0 ;
-                    IEC0bits.CTIE = 1 ;
-                    PORTFSET = 0x1 ;
+        
+        if(cmd != CMD_NUL) {
+            if (!spi_done) {
+                switch(cmd) {
+                    case CMD_CFG:
+                        dma_setup(3 + 5 * num_active_axes + num_active_pwm) ;
+                        break ;
+                    case CMD_POS:
+                        dma_setup(pos_send_count) ;
+                        break ;
+                    case CMD_VEL:
+                        dma_setup(num_active_axes) ;
+                        break ;
+                    case CMD_PWM:
+                        dma_setup(num_active_pwm) ;
+                        break ;
+                    case CMD_STP:
+                        spi_done = 1 ;
+                        break ;
+                // switch(cmd)
                 }
+            // if (!spi_done)    
             }
-            
-            break ;
+            else {
+                switch(cmd) {
+                // Configure command: configure frequency and axes
+                case CMD_CFG:
+                    IEC0bits.CTIE = 0 ;
+        //            checksum = cmd ; 
 
-        // Position command: Report position of each axis
-        case CMD_POS:
-            IEC0bits.CTIE = 0 ;
-            clear(&txb) ;
-            checksum = 0 ;
-           
-            for (i = 0 ; i < pos_send_count ; i++) {
-                if (SPI2STATbits.SPITBE) SPI2BUF = pos_acc_arr[i] ;
-                else push(&txb, pos_acc_arr[i]) ;
-            }
-            
-            IEC0bits.CTIE = 1 ;
-            break ;
+                    base_freq = pop(&rxb) ;
+                    checksum ^= base_freq ;
 
-        // Velocity command: Update velocity of selected axes.
-        case CMD_VEL:
-            IEC0bits.CTIE = 0 ;
-            clear(&txb) ;
-           
-            for (a = active_axes ; *a != -1 ; a++) {
-                axes_arr[*a]->velocity = pop_wait(&rxb) ; 
-            }
+                    num_active_axes = pop(&rxb) ;
+                    checksum ^= num_active_axes ;
+
+                    num_active_pwm = pop(&rxb) ;
+                    checksum ^= num_active_pwm ;
+
+                    for(i = 0 ; i < num_active_axes ; i++) {
+                        axis = pop(&rxb) ;
+                        checksum ^= axis ;
+
+                        active_axes_mask |= axis ;
+                        axis = get_axis_ind(axis, axes_mask) ;
+                        active_axes[i] = axis ;
+
+                        axes_arr[axis]->step_len = pop(&rxb) ;
+                        checksum ^= axes_arr[axis]->step_len ;
+
+                        axes_arr[axis]->step_space = pop(&rxb) ;
+                        checksum ^= axes_arr[axis]->step_space ;
+
+                        axes_arr[axis]->dir_setup = pop(&rxb) ; 
+                        axes_arr[axis]->dir_counter = 0 ;
+                        checksum ^= axes_arr[axis]->dir_setup ;
+
+                        axes_arr[axis]->dir_hold = pop(&rxb) ;
+                        checksum ^= axes_arr[axis]->dir_hold ;
+
+                        // Activate axis (rise enable)
+                        axis_activate(axes_arr[axis]) ;
+                    }
+
+                    active_axes[i] = -1 ;
+
+                    for(i = 0 ; i < num_active_pwm ; i++) {
+                        pwms[i]->frequency = pop(&rxb) ;
+                        checksum ^= pwms[i]->frequency ;
+
+                        pwm_activate(pwms[i]) ;
+                    }
+
+                    // TODO: checksum check here
+                    checksum = 0 ;
+
+                    pos_send_count = 2 * num_active_axes + 2 ;
+
+                    // Set core timer compare ticks to selected pulse
+                    // generation base frequency
+                    if (base_freq > 0) {
+                        core_count = CORE_TIMER_FREQ / base_freq ;
+
+                        if(core_count > 0) {
+                            int_store = disableInterrupts() ;
+                            _CP0_SET_COUNT(0) ;
+                            _CP0_SET_COMPARE(core_count) ;
+                            _CP0_BIC_CAUSE(_CP0_CAUSE_DC_MASK) ;
+                            restoreInterrupts(int_store) ;
+
+                            IFS0bits.CTIF = 0 ;
+                            IEC0bits.CTIE = 1 ;
+                            PORTFSET = 0x1 ;
+                        }
+                    }
+
+                    break ;
+
+                // Position command: Report position of each axis
+                case CMD_POS:
+                    IEC0bits.CTIE = 0 ;
+                    clear(&txb) ;
+                    checksum = 0 ;
+
+                    for (i = 0 ; i < pos_send_count ; i++) {
+                        if (SPI2STATbits.SPITBE) SPI2BUF = pos_acc_arr[i] ;
+                        else push(&txb, pos_acc_arr[i]) ;
+                    }
+
+                    IEC0bits.CTIE = 1 ;
+                    break ;
+
+                // Velocity command: Update velocity of selected axes.
+                case CMD_VEL:
+                    IEC0bits.CTIE = 0 ;
+                    clear(&txb) ;
+
+                    for (a = active_axes ; *a != -1 ; a++) {
+                        axes_arr[*a]->velocity = pop_wait(&rxb) ; 
+                    }
+
+                    SPI2BUF = checksum ;
+                    checksum = 0 ;
+                    IEC0bits.CTIE = 1 ;
+
+                    break ;
+
+                // PWM command: Update the duty cycle of the PWM sources
+                case CMD_PWM:
+                    IEC0bits.CTIE = 0 ;
+                    clear(&txb) ;
+        //            checksum = cmd ;
+
+                    for (i = 0 ; i < num_active_pwm ; i++) {
+                        pwms[i]->duty.bin = pop_wait(&rxb) ;
+        //                checksum ^= pwms[i]->duty.bin ;
+                    }
+
+                    SPI2BUF = checksum ;
+                    checksum = 0 ;
+                    IEC0bits.CTIE = 1 ;
+
+                    for (i = 0 ; i < num_active_pwm ; i++) pwm_set_duty(pwms[i]) ;
+
+                    break ;
+
+                // Stop command: Deactivate all active axes
+                case CMD_STP:
+                    IEC0bits.CTIE = 0 ;
+                    _CP0_BIS_CAUSE(_CP0_CAUSE_DC_MASK) ;
+
+                    for (a = active_axes ; *a != -1 ; a++)
+                        axis_deactivate(axes_arr[*a]) ;
+
+                    for (i = 0 ; i < num_active_pwm ; i++) 
+                        pwm_deactivate(pwms[i]) ;
+
+                    PORTFCLR = 0x1 ;
+                    IFS0bits.CTIF = 0 ;
+
+                    break ;
+                // switch (cmd)
+                }
             
-            SPI2BUF = checksum ;
-            checksum = 0 ;
-            IEC0bits.CTIE = 1 ;
+                cmd = CMD_NUL ;
+                spi_done = 0 ;
                 
-            break ;
-            
-        // PWM command: Update the duty cycle of the PWM sources
-        case CMD_PWM:
-            IEC0bits.CTIE = 0 ;
-            clear(&txb) ;
-//            checksum = cmd ;
-            
-            for (i = 0 ; i < num_active_pwm ; i++) {
-                pwms[i]->duty.bin = pop_wait(&rxb) ;
-//                checksum ^= pwms[i]->duty.bin ;
+            // else .. if(!spi_done)
             }
-            
-            SPI2BUF = checksum ;
-            checksum = 0 ;
-            IEC0bits.CTIE = 1 ;
-            
-            for (i = 0 ; i < num_active_pwm ; i++) pwm_set_duty(pwms[i]) ;
-            
-            break ;
-                
-        // Stop command: Deactivate all active axes
-        case CMD_STP:
-            IEC0bits.CTIE = 0 ;
-            _CP0_BIS_CAUSE(_CP0_CAUSE_DC_MASK) ;
-            
-            for (a = active_axes ; *a != -1 ; a++)
-                axis_deactivate(axes_arr[*a]) ;
-            
-            for (i = 0 ; i < num_active_pwm ; i++) 
-                pwm_deactivate(pwms[i]) ;
-            
-            PORTFCLR = 0x1 ;
-            IFS0bits.CTIF = 0 ;
-            
-            break ;
-
-        default:
+        // if(cmd != ...)
+        }
+        
+        else {
             for (i = 0 ; i < num_switches ; i++) {
                 state = *(switches[i]->port) & switches[i]->pin ;
 
@@ -479,13 +512,8 @@ int main(void) {
             }
             pos_acc_arr[i] = chks ;
             IEC0bits.CTIE = 1 ;
-            
-            break ;
         }
 
-        cmd = CMD_NUL ;
-    }    
-    
     return(EXIT_SUCCESS) ;
 }
 
@@ -634,26 +662,15 @@ void __ISR(_CHANGE_NOTICE_VECTOR, IPL5SRS) SwitchHandler(void) {
 }
 */
 
+
 void __ISR(_SPI_2_VECTOR, IPL6AUTO) SpiHandler(void) {
-    unsigned int t ;
     
-    if (IFS1bits.SPI2RXIF) {
-        t = SPI2BUF ;
-        if (cmd != CMD_POS) { 
-            push(&rxb, t) ;
-            checksum ^= t ;
-        }
+    if (IFS1bits.SPI2RXIF) { 
+        cmd = SPI2BUF ;
+        IEC1bits.SPI2TXIE = 0 ;
     }
-        
-    if (IFS1bits.SPI2TXIF) {
-        if (!isEmpty(&txb)) {
-            t = pop(&txb) ;
-            SPI2BUF = t ;
-        }
-    }
-   
+    
     flags.ucont_fault = IFS1bits.SPI2EIF ;
-    
     IFS1CLR = 0xe0 ;
 }
 
