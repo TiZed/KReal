@@ -39,7 +39,7 @@ encoding utf-8
 Sheet 1 3
 Title "KReal"
 Date ""
-Rev "0.2"
+Rev "0.5"
 Comp "TiZed"
 Comment1 ""
 Comment2 ""
@@ -1590,17 +1590,6 @@ Wire Wire Line
 Wire Wire Line
 	9420 5270 9420 5310
 $Comp
-L +5V #PWR033
-U 1 1 5907D354
-P 9510 4285
-F 0 "#PWR033" H 9510 4135 50  0001 C CNN
-F 1 "+5V" H 9510 4425 50  0000 C CNN
-F 2 "" H 9510 4285 50  0001 C CNN
-F 3 "" H 9510 4285 50  0001 C CNN
-	1    9510 4285
-	1    0    0    -1  
-$EndComp
-$Comp
 L Q_NPN_BEC Q101
 U 1 1 5907D80E
 P 9320 5510
@@ -1658,5 +1647,11 @@ Wire Wire Line
 	8870 5510 8800 5510
 Wire Wire Line
 	9420 4285 9620 4285
-Connection ~ 9510 4285
+Text GLabel 9690 4145 2    60   Input ~ 0
+V_leds
+Wire Wire Line
+	9515 4145 9690 4145
+Wire Wire Line
+	9515 4145 9515 4285
+Connection ~ 9515 4285
 $EndSCHEMATC
