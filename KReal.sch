@@ -366,9 +366,9 @@ Connection ~ 9060 1660
 Text GLabel 8620 1000 0    60   Output ~ 0
 VBUS
 Text GLabel 8620 1180 0    60   BiDi ~ 0
-D_N
-Text GLabel 8620 1320 0    60   BiDi ~ 0
 D_P
+Text GLabel 8620 1320 0    60   BiDi ~ 0
+D_N
 Text GLabel 8620 1500 0    60   Output ~ 0
 USB_ID
 Wire Wire Line

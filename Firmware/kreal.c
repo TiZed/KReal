@@ -141,7 +141,7 @@ static void config_spi() {
     SPI2CONbits.ON = 1 ;
 }
 
-static void dma_setup(uint size) {
+static void dma_setup() {
     IEC1bits.DMA0IE = 0 ;       // Disable DMA Ch. 0 Interrupt
     IEC1bits.DMA1IE = 0 ;       // Disable DMA Ch. 1 Interrupt
     IFS1bits.DMA0IF = 0 ;       // Clear and DMA Ch. 0 pending interrupts
@@ -150,9 +150,9 @@ static void dma_setup(uint size) {
     DMACONbits.ON = 1 ;         // Turn DMA controller on
     
     // Configure DMA Channel 0 for SPI Rx
-    DCH0CONbits.CHEN = 0 ;      // Disable DMA Ch. 0
-    DCH0CONbits.CHPRI = 3 ;     // DMA Ch. 0 set high priority (3)
-    DCH0CONbits.CHAEN = 1 ;     // DMA Ch. 0 automatic open
+    DCH0CONbits.CHEN = 0 ;              // Disable DMA Ch. 0
+    DCH0CONbits.CHPRI = 3 ;             // DMA Ch. 0 set high priority (3)
+    DCH0CONbits.CHAEN = 1 ;             // DMA Ch. 0 automatic open
     
     DCH0ECONbits.CHSIRQ = _SPI2_RX_IRQ ; // Set DMA Ch. 0 start IRQ from SPI2 Rx
     DCH0ECONbits.SIRQEN = 1 ;            // Enable DMA Ch. 0 start from IRQ
@@ -160,14 +160,13 @@ static void dma_setup(uint size) {
     DCH0SSA = (void *) &SPI2BUF ;       // DMA Ch. 0 source address is SPI2 Buffer
     DCH0DSA = (void *) rxb.data ;       // DMA Ch. 0 destination address is RX buffer
     
-    DCH0SSIZ = 4 ;                      // 1B source size (SPI2BUF)
-    DCH0DSIZ = size ;                   // destination size 
-    DCH0CSIZ = 4 ;                      // Set cell transfer to 1B
+    DCH0SSIZ = 4 ;                      // 4B source size (SPI2BUF)
+    DCH0CSIZ = 4 ;                      // Set cell transfer to 4B
     
     // Configure DMA Channel 1 for SPI Tx
-    DCH1CONbits.CHEN = 0 ;      // Disable DMA Ch. 1
-    DCH1CONbits.CHPRI = 3 ;     // DMA Ch. 1 set high priority (3)
-    DCH1CONbits.CHAEN = 1 ;     // DMA Ch. 1 automatic open
+    DCH1CONbits.CHEN = 0 ;              // Disable DMA Ch. 1
+    DCH1CONbits.CHPRI = 3 ;             // DMA Ch. 1 set high priority (3)
+    DCH1CONbits.CHAEN = 1 ;             // DMA Ch. 1 automatic open
     
     DCH1ECONbits.CHSIRQ = _SPI2_TX_IRQ ; // Set DMA Ch. 1 start IRQ from SPI2 Tx
     DCH1ECONbits.SIRQEN = 1 ;            // Enable DMA Ch. 1 start from IRQ
@@ -175,9 +174,16 @@ static void dma_setup(uint size) {
     DCH1SSA = (void *) txb.data ;       // DMA Ch. 1 source address is the TX buffer
     DCH1DSA = (void *) &SPI2BUF ;       // DMA Ch. 0 destination address SPI2BUF
     
-    DCH1SSIZ = size ;                   // destination size 
-    DCH1DSIZ = 4 ;                      // 1B source size (SPI2BUF)
-    DCH1CSIZ = 4 ;                      // Set cell transfer to 1B
+    DCH1DSIZ = 4 ;                      // 4B destination size (SPI2BUF)
+    DCH1CSIZ = 4 ;                      // Set cell transfer to 4B
+}
+
+void dma_trig(uint size) {
+    
+    DCH0DSIZ = size ;                   // destination size 
+    DCH1SSIZ = size ;                   // source size 
+}
+    
 }
 
 
