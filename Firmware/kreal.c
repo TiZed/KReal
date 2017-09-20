@@ -22,7 +22,7 @@
  *
  *
  * LED blue - RF0
- * LED Read - RF1 
+ * LED Red  - RF1 
  * 
  * SPI MISO - SDO2/RG8 
  * SPI MOSI - SDI2/RG7
@@ -38,6 +38,11 @@
  * Kc - RE6
  * En - RE7
  * 
+ * Switches Interrupt - INT3/RD10
+ * Faults Interrupt   - INT2/RD9
+ * Z-Level interrupt  - INT1/RD8
+ * EMO switch         - INT0/RD0
+ * 
  */
 
 #include <p32xxxx.h>
@@ -51,16 +56,23 @@
 #include "axis.h"
 #include "switch.h"
 #include "uint_buffer.h"
+#include "cd4048b.h"
 
-//         Port
-//     Axis      EN     Dir     Step
-ADD_AXIS(X, B, BIT_6,  BIT_5,  BIT_4) ;  
-ADD_AXIS(Y, B, BIT_9,  BIT_8,  BIT_7) ;  
-ADD_AXIS(Z, B, BIT_12, BIT_11, BIT_10) ;   
 
-static axis_t * const axes_arr[] = {&axis_X, &axis_Y, &axis_Z} ;
+// Axes Configuration
+
+//         Port                      Fault
+//     Axis      EN     Dir     Step  Port  Pin
+ADD_AXIS(X, B, BIT_6 ,  BIT_5,  BIT_4, E, BIT_0) ;  
+ADD_AXIS(Y, B, BIT_9 ,  BIT_8,  BIT_7, E, BIT_1) ;  
+ADD_AXIS(Z, B, BIT_12, BIT_11, BIT_10, E, BIT_2) ;   
+// ADD_AXIS(A, B, BIT_15, BIT_14, BIT_13, E, BIT_3) ;
+
+static axis_t * const axes_arr[] = {&axis_X, &axis_Y, &axis_Z} ; // &axis_A
 
 // TODO: Add EMO and Faults interrupts handler
+
+// Switches Configuration
 
 //        Axis  Type  P   Pin   CN  PU
 ADD_SWITCH(NONE, EMO, D,  BIT_0, -1, 0) ;  
@@ -70,19 +82,22 @@ ADD_SWITCH(Y,  LIMIT, D,  BIT_6, 15, 1) ;
 ADD_SWITCH(Y,   HOME, D,  BIT_7, 16, 1) ;  
 ADD_SWITCH(Z,  LIMIT, B,  BIT_0,  2, 1) ;  
 ADD_SWITCH(Z,   HOME, B,  BIT_1,  3, 1) ;  
-ADD_SWITCH(X,  FAULT, E,  BIT_0, -1, 0) ;  
-ADD_SWITCH(Y,  FAULT, E,  BIT_1, -1, 0) ;  
-ADD_SWITCH(Z,  FAULT, E,  BIT_2, -1, 0) ;  
+// ADD_SWITCH(A,  LIMIT, B,  BIT_2,  4, 1) ;  
+// ADD_SWITCH(A,   HOME, B,  BIT_3,  5, 1) ; 
 
 static switch_t * const switches[] = {&switch_NONE_EMO,
                                       &switch_X_LIMIT, &switch_X_HOME,
                                       &switch_Y_LIMIT, &switch_Y_HOME,
-                                      &switch_Z_LIMIT, &switch_Z_HOME,
-                                      &switch_X_FAULT, &switch_Y_FAULT,
-                                      &switch_Z_FAULT} ;
+                                      &switch_Z_LIMIT, &switch_Z_HOME} ;
+//                                    &switch_A_LIMIT, &switch_A_HOME} ;
 
+// PWM Channels configuration
+
+//      NAME     Ch.  Timer   Inverse 
 ADD_PWM(spindle, OC2, TIMER2, 1) ;
 ADD_PWM(laser,   OC3, TIMER3, 1) ;
+
+SET_CD4048B(ic1, E, BIT_4, E, BIT_5, E, BIT_6, E, BIT_7) ;
 
 static pwm_t * const pwms[] = {&pwm_spindle, &pwm_laser} ;
 
@@ -157,8 +172,8 @@ static void dma_setup() {
     DCH0ECONbits.CHSIRQ = _SPI2_RX_IRQ ; // Set DMA Ch. 0 start IRQ from SPI2 Rx
     DCH0ECONbits.SIRQEN = 1 ;            // Enable DMA Ch. 0 start from IRQ
     
-    DCH0SSA = (void *) &SPI2BUF ;       // DMA Ch. 0 source address is SPI2 Buffer
-    DCH0DSA = (void *) rxb.data ;       // DMA Ch. 0 destination address is RX buffer
+    DCH0SSA = (int) &SPI2BUF ;       // DMA Ch. 0 source address is SPI2 Buffer
+    DCH0DSA = (int) rxb.data ;       // DMA Ch. 0 destination address is RX buffer
     
     DCH0SSIZ = 4 ;                      // 4B source size (SPI2BUF)
     DCH0CSIZ = 4 ;                      // Set cell transfer to 4B
@@ -171,8 +186,8 @@ static void dma_setup() {
     DCH1ECONbits.CHSIRQ = _SPI2_TX_IRQ ; // Set DMA Ch. 1 start IRQ from SPI2 Tx
     DCH1ECONbits.SIRQEN = 1 ;            // Enable DMA Ch. 1 start from IRQ
     
-    DCH1SSA = (void *) txb.data ;       // DMA Ch. 1 source address is the TX buffer
-    DCH1DSA = (void *) &SPI2BUF ;       // DMA Ch. 0 destination address SPI2BUF
+    DCH1SSA = (int) txb.data ;       // DMA Ch. 1 source address is the TX buffer
+    DCH1DSA = (int) &SPI2BUF ;       // DMA Ch. 0 destination address SPI2BUF
     
     DCH1DSIZ = 4 ;                      // 4B destination size (SPI2BUF)
     DCH1CSIZ = 4 ;                      // Set cell transfer to 4B
@@ -183,10 +198,7 @@ void dma_trig(uint size) {
     DCH0DSIZ = size ;                   // destination size 
     DCH1SSIZ = size ;                   // source size 
 }
-    
-}
-
-
+ 
 void config_switches() {
     uint32_t cn_num, i ;
     
@@ -282,6 +294,8 @@ int main(void) {
     // Disable all pull-ups
     CNPUE = 0 ;
     
+    setup_logic(LOGIC_OR, &ic1_logic) ;
+    enable_logic(&ic1_logic) ;
     config_switches() ;
     config_spi() ;
     
@@ -519,6 +533,7 @@ int main(void) {
             pos_acc_arr[i] = chks ;
             IEC0bits.CTIE = 1 ;
         }
+    }
 
     return(EXIT_SUCCESS) ;
 }
@@ -642,42 +657,6 @@ void clr_switch(uint32_t axis, uint32_t type) {
             else if (type == FAULT) flags.e_drv_fault = 0 ;
             break ;
     }
-}
-
-/*
-// Switch change interrupt
-void __ISR(_CHANGE_NOTICE_VECTOR, IPL5SRS) SwitchHandler(void) {
-    unsigned int i, state ;
-    
-    PORTEINV = 0x2 ;
-    
-    for (i = 0 ; i < num_switches ; i++) {
-        state = *(switches[i]->port) & switches[i]->pin ;
-        
-        if (state != switches[i]->state) {
-            switches[i]->state = state ;
-            
-            if (switches[i]->state) set_switch(switches[i]->axis, switches[i]->type) ;
-            else clr_switch(switches[i]->axis, switches[i]->type) ; 
-        }
-        WDTCONSET = 1 ;
-    }  
-  
-    IFS1bits.CNIF = 0 ;     // Clear CN interrupt 
-    PORTEINV = 0x2 ;
-}
-*/
-
-
-void __ISR(_SPI_2_VECTOR, IPL6AUTO) SpiHandler(void) {
-    
-    if (IFS1bits.SPI2RXIF) { 
-        cmd = SPI2BUF ;
-        IEC1bits.SPI2TXIE = 0 ;
-    }
-    
-    flags.ucont_fault = IFS1bits.SPI2EIF ;
-    IFS1CLR = 0xe0 ;
 }
 
 

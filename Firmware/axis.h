@@ -78,6 +78,10 @@ typedef struct {
     uint32_t dir_pin ;
     uint32_t step_pin ;
     
+    volatile unsigned int  *fault_tris_set ;
+    volatile unsigned int  *fault_port ;
+    uint32_t fault_pin ;
+    
     uint32_t step_len ;
     uint32_t step_space ;
     uint32_t dir_setup ;
@@ -88,11 +92,14 @@ typedef struct {
     int32_t dir_counter ;
 } axis_t ; 
 
-#define ADD_AXIS(AXIS, PRT, EN_PIN, DIR_PIN, STEP_PIN) \
+#define ADD_AXIS(AXIS, PRT, EN_PIN, DIR_PIN, STEP_PIN, FAULT_PORT, FAULT_PIN) \
     static axis_t axis_ ## AXIS = {AXIS_ ## AXIS, 0, -1, 0, 0, \
                                    &TRIS ## PRT ## CLR , &PORT ## PRT ## SET, \
                                    &PORT ## PRT ## CLR, EN_PIN, \
                                    DIR_PIN, STEP_PIN, \
+                                   &TRIS ## FAULT_PORT ## SET, \
+                                   &PORT ## FAULT_PORT, \
+                                   FAULT_PIN, \
                                    2, 2, 1, 0, DIR_HOLD, 0, 0}                       
 
     
