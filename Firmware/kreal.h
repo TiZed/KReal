@@ -39,24 +39,17 @@ extern "C" {
 
 // Commands
 #define CMD_CFG     0x47464323    // #CFG
-#define CMD_VEL     0x4c455623    // #VEL
-#define CMD_POS     0x524f5023    // #POS
+#define CMD_UPD     0x44505523    // #UPD
 #define CMD_STP     0x50545323    // #STP
 #define CMD_CHK     0x4b484323    // #CHK
-#define CMD_PWM     0x4d575023    // #PWM
 #define CMD_NUL     0x00000000    // Dummy NULL command
     
 void set_switch(uint32_t axis, uint32_t type) ;
 void clr_switch(uint32_t axis, uint32_t type) ;
+void all_stop() ;
+void update_switches() ;
 
 #define SWAP_BYTES(IN)  IN << 24 | (IN & 0xff00) << 8 | (IN & 0xff0000) >> 8 | IN >> 24
-
-static inline unsigned int __attribute__((always_inline)) spiTransW(unsigned int word) {
-    while(!SPI2STATbits.SPITBE) WDTCONSET = 1 ; 
-    SPI2BUF = word ;
-    while(!SPI2STATbits.SPIRBF) WDTCONSET = 1 ; 
-    return SPI2BUF ;
-}
 
 uint32_t __attribute__((nomips16))  enableInterrupts(void)
 {

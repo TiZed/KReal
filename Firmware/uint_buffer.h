@@ -67,7 +67,22 @@ static inline unsigned int __attribute__((always_inline)) pop_wait(Buffer * buff
     return(ret_val) ;
 }
 
-unsigned int peek(Buffer * buffer) ;
-void clear(Buffer * buffer) ;
+static inline void __attribute__((always_inline)) set_head(Buffer * buffer, unsigned int value) {
+    buffer->head = value ;
+}
+
+static inline void __attribute__((always_inline)) set_tail(Buffer * buffer, unsigned int value) {
+    buffer->tail = value ;
+}
+
+static inline void __attribute__((always_inline))  clear(Buffer * buffer) {
+    buffer->head = buffer->tail ;
+}
+
+unsigned int peek(Buffer * buffer) {
+    if(isEmpty(buffer)) return(0) ;
+    unsigned int ret_val = buffer->data[buffer->tail] ;
+    return(ret_val) ;
+}
 
 #endif /* BUFFER_H_ */

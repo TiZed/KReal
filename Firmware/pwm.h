@@ -37,7 +37,7 @@ typedef struct {
 } pwm_t ;
 
 #define ADD_PWM(PWM, OC, TIMER, INVERSE) \
-    static pwm_t pwm_ ## PWM = {&OC ## CON, &OC ## R, &OC ## RS, 0, TIMER, 0, 0, 0}
+    pwm_t pwm_ ## PWM = {&OC ## CON, &OC ## R, &OC ## RS, 0, TIMER, 0, 0, 0}
 
 void pwm_activate(pwm_t * const pwm) ;
 void pwm_set_duty(pwm_t * const pwm) ;

@@ -53,23 +53,23 @@ typedef struct {
 } cd4048b_t;
 
 #define SET_CD4048B(NAME, KA_PORT, KA_PIN, KB_PORT, KB_PIN, KC_PORT, KC_PIN, EN_PORT, EN_PIN) \
-    static cd4048b_t NAME ## _logic = {&TRIS ## KA_PORT ## CLR,  \
-                                      &PORT ## KA_PORT ## SET,  \
-                                      &PORT ## KA_PORT ## CLR,  \
-                                      KA_PIN, \
-                                      &TRIS ## KB_PORT ## CLR,  \
-                                      &PORT ## KB_PORT ## SET,  \
-                                      &PORT ## KB_PORT ## CLR,  \
-                                      KB_PIN, \
-                                      &TRIS ## KC_PORT ## CLR,  \
-                                      &PORT ## KC_PORT ## SET,  \
-                                      &PORT ## KC_PORT ## CLR,  \
-                                      KC_PIN, \
-                                      &TRIS ## EN_PORT ## CLR,  \
-                                      &PORT ## EN_PORT ## SET,  \
-                                      &PORT ## EN_PORT ## CLR,  \
-                                      EN_PIN, \
-                                      LOGIC_NOR}
+    cd4048b_t NAME ## _logic = {&TRIS ## KA_PORT ## CLR,  \
+                                &PORT ## KA_PORT ## SET,  \
+                                &PORT ## KA_PORT ## CLR,  \
+                                KA_PIN, \
+                                &TRIS ## KB_PORT ## CLR,  \
+                                &PORT ## KB_PORT ## SET,  \
+                                &PORT ## KB_PORT ## CLR,  \
+                                KB_PIN, \
+                                &TRIS ## KC_PORT ## CLR,  \
+                                &PORT ## KC_PORT ## SET,  \
+                                &PORT ## KC_PORT ## CLR,  \
+                                KC_PIN, \
+                                &TRIS ## EN_PORT ## CLR,  \
+                                &PORT ## EN_PORT ## SET,  \
+                                &PORT ## EN_PORT ## CLR,  \
+                                EN_PIN, \
+                                LOGIC_NOR}
 
 void setup_logic(uint32_t mode, cd4048b_t * logic) ;
 void enable_logic(cd4048b_t * logic) ;

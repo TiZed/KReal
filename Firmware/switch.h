@@ -39,7 +39,9 @@ typedef union {
         unsigned int switch_c_limit :1 ;    // bit 12
         unsigned int switch_e_home :1 ;     // bit 13
         unsigned int switch_e_limit :1 ;    // bit 14
-        unsigned int reserved_sw :8 ;       // bits 15-22
+        unsigned int z_level :1 ;           // bit 15
+        unsigned int reserved_sw :6 ;       // bits 16-21
+        unsigned int xsum_error :1 ;        // bit 22
         unsigned int switch_emo :1 ;        // bit 23
         unsigned int ucont_fault :1 ;       // bit 24
         unsigned int x_drv_fault :1 ;       // bit 25
@@ -70,7 +72,7 @@ typedef struct {
 } switch_t ;
 
 #define ADD_SWITCH(AXIS, TYPE, P_NAME, PIN, CN, PULLUP) \
-    static switch_t switch_ ## AXIS ## _ ## TYPE = {AXIS_ ## AXIS, TYPE, 0, \
+    switch_t switch_ ## AXIS ## _ ## TYPE = {AXIS_ ## AXIS, TYPE, 0, \
                                                  &PORT ## P_NAME,        \
                                                  &TRIS ## P_NAME ## SET, \
                                                  PIN, CN, PULLUP}
