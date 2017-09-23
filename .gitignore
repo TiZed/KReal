@@ -11,6 +11,7 @@ _autosave*
 build
 debug
 nbproject
+MPLABXLog.xml*
 
 # ignore production zip files
 *.zip
