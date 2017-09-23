@@ -57,6 +57,7 @@
 #include "switch.h"
 #include "uint_buffer.h"
 #include "cd4048b.h"
+#include "leds.h"
 
 
 // Axes Configuration
@@ -94,6 +95,11 @@ switch_t * const switches[] = {&switch_X_LIMIT, &switch_X_HOME,
 //      NAME     Ch.  Timer   Inverse 
 ADD_PWM(spindle, OC2, TIMER2, 1) ;
 ADD_PWM(laser,   OC3, TIMER3, 1) ;
+
+// LEDs
+
+DEF_LED(red, F, BIT_1, LED_HIGH) ;
+DEF_LED(blue, F, BIT_0, LED_HIGH) ;
 
 SET_CD4048B(ic1, E, BIT_4, E, BIT_5, E, BIT_6, E, BIT_7) ;
 
@@ -206,6 +212,7 @@ void config_switches() {
     IEC1bits.CNIE = 0 ;         // Disable CN interrupt
     AD1PCFGSET = 0xffff ;       // Make all AN pins digital
     
+    
     for (i = 0 ; i < num_switches ; i++) {
         // Set pin as input
         *(switches[i]->tris_set) = switches[i]->pin ;
@@ -239,6 +246,8 @@ void config_ints() {
     IEC0bits.INT1IE = 0 ;
     IEC0bits.INT2IE = 0 ;
     IEC0bits.INT3IE = 0 ;
+    
+    TRISDSET = BIT_0 | BIT_8 | BIT_9 | BIT_10 ;   // Set INT0-3 pinw as input
     
     INTCONbits.INT0EP = 1 ;     // Set falling edge for EMO.
     INTCONbits.INT1EP = 1 ;     // Set falling edge for Z-Level.
@@ -314,17 +323,19 @@ int main(void) {
     int64_t pos ;
     
     disableInterrupts() ;
-    
-    TRISD = 0x0 ;
-    PORTD = 0x0 ;
     setup() ;
     
     // Disable all pull-ups
     CNPUE = 0 ;
     
+    setup_led(&led_red) ;
+    setup_led(&led_blue) ;
+    led_on(&led_red) ;
+    led_on(&led_blue) ;
+    
+    config_switches() ;
     setup_logic(LOGIC_OR, &ic1_logic) ;
     enable_logic(&ic1_logic) ;
-    config_switches() ;
     config_ints() ;
     config_spi() ;
     dma_setup() ;
@@ -339,19 +350,11 @@ int main(void) {
         axis_setup(axes_arr[i]) ;
     }
     
-    TRISECLR = 0x3 ;
-    PORTECLR = 0x3 ;
-    
-    // Set RF0 as output and turn on LED
-    TRISFCLR = 0x1 ;
-    PORTFCLR = 0x1 ;
-    
     // Report timeout fault
     if (RCONbits.WDTO || RCONbits.BOR) {
         flags.ucont_fault = 1 ;
         RCONbits.WDTO = 0 ;
         RCONbits.BOR = 0 ;
-        PORTFSET = 0x1 ;
     }
               
     clear(&rxb) ;
@@ -441,7 +444,6 @@ int main(void) {
 
                         IFS0bits.CTIF = 0 ;
                         IEC0bits.CTIE = 1 ;
-                        PORTFSET = 0x1 ;
                     }
                 }
 
@@ -528,7 +530,6 @@ int main(void) {
                     push(&txb, chks) ; 
                 }
             }
-            
             spi_cs_last = spi_cs_current ;
         }
     }
@@ -549,7 +550,6 @@ void all_stop() {
     for (i = 0 ; i < num_active_pwm ; i++) 
         pwm_deactivate(pwms[i]) ;
 
-    PORTFCLR = 0x1 ;
     IFS0bits.CTIF = 0 ;
 }
 

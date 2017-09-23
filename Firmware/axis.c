@@ -79,6 +79,7 @@ void axis_deactivate(axis_t * const axis) {
 void axis_setup(axis_t * const axis) {
     *(axis->port_clr) = axis->en_pin | axis->dir_pin | axis->step_pin ; 
     *(axis->tris_clr) = axis->en_pin | axis->dir_pin | axis->step_pin ;
+    *(axis->fault_tris_set) = axis->fault_pin ;
 }
 
 int32_t get_axis_ind(int32_t axis_name, uint32_t axes_mask) {
