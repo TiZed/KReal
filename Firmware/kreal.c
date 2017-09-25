@@ -71,8 +71,6 @@ ADD_AXIS(Z, B, BIT_12, BIT_11, BIT_10, E, BIT_2) ;
 
 axis_t * const axes_arr[] = {&axis_X, &axis_Y, &axis_Z} ; // &axis_A
 
-// TODO: Add EMO and Faults interrupts handler
-
 // Switches Configuration
 
 //        Axis  Type  P   Pin   CN  PU
@@ -100,6 +98,8 @@ ADD_PWM(laser,   OC3, TIMER3, 1) ;
 
 DEF_LED(red, F, BIT_1, LED_HIGH) ;
 DEF_LED(blue, F, BIT_0, LED_HIGH) ;
+
+led_t * const leds[] = {&led_red, &led_blue} ;
 
 SET_CD4048B(ic1, E, BIT_4, E, BIT_5, E, BIT_6, E, BIT_7) ;
 
@@ -209,10 +209,6 @@ static void dma_setup() {
 void config_switches() {
     uint32_t cn_num, i ;
     
-    IEC1bits.CNIE = 0 ;         // Disable CN interrupt
-    AD1PCFGSET = 0xffff ;       // Make all AN pins digital
-    
-    
     for (i = 0 ; i < num_switches ; i++) {
         // Set pin as input
         *(switches[i]->tris_set) = switches[i]->pin ;
@@ -232,13 +228,6 @@ void config_switches() {
         if (switches[i]->state) set_switch(switches[i]->axis, switches[i]->type) ;
         else clr_switch(switches[i]->axis, switches[i]->type) ;  
     }  
-    
-    // Set CN Interrupt priority to 5, sub-priority to 0
-    IPC6bits.CNIP = 5 ;  
-    IPC6bits.CNIS = 1 ;
-    
-    IFS1bits.CNIF = 0 ;     // Clear CN interrupt
-    IEC1bits.CNIE = 0 ;     // Enable CN interrupt
 }
 
 void config_ints() {
@@ -254,6 +243,12 @@ void config_ints() {
     INTCONbits.INT2EP = 0 ;     // Set raising edge for motor faults.
     INTCONbits.INT3EP = 0 ;     // Set falling edge for switches.
     
+    IFS0bits.INT0IF = 0 ;       // Clear INT0 interrupt 
+    IFS0bits.INT1IF = 0 ;       // Clear INT1 interrupt
+    IFS0bits.INT2IF = 0 ;       // Clear INT2 interrupt
+    IFS0bits.INT3IF = 0 ;       // Clear INT3 interrupt
+    
+    // Set external interrupts priority
     IPC0bits.INT0IP = 4 ;
     IPC0bits.INT0IS = 3 ;
     
@@ -294,18 +289,19 @@ void setup(void) {
 	tmp = (tmp & ~7) | 3;
 	asm("mtc0 %0,$16,0" :: "r" (tmp));
     
-    // Set peripherals clock to sys_clk
-    tmp = OSCCON ;
-    tmp &= ~_OSCCON_PBDIV_MASK ;
     
-    SYSKEY = 0 ;                // Unlock sequence
+    tmp = OSCCON ;
+    tmp &= ~_OSCCON_PBDIV_MASK ;   // Set peripherals clock to sys_clk
+    tmp |= _OSCCON_SOSCEN_MASK ;   // Enable 32.768 kHz secondary clock 
+    
+    SYSKEY = 0 ;                   // Unlock sequence
     SYSKEY = 0xAA996655 ; 
     SYSKEY = 0x556699AA ;  
     
     OSCCON = tmp ;
     tmp = OSCCON ;
     
-    SYSKEY = 0 ;                // Lock
+    SYSKEY = 0 ;                   // Lock
     
     // Enable MultiVectorInt
     asm volatile("mfc0   %0,$13" : "=r"(tmp));
@@ -313,6 +309,13 @@ void setup(void) {
     asm volatile("mtc0   %0,$13" : "+r"(tmp));
     
     INTCONSET = _INTCON_MVEC_MASK ; 
+    
+    AD1PCFGSET = 0xffff ;         // Make all AN pins digital
+    
+    // Core timer enable and set interrupt priority
+    _CP0_BIS_CAUSE(_CP0_CAUSE_DC_MASK) ;
+    IPC0bits.CTIP = 5 ;
+    IPC0bits.CTIS = 0 ;
 }
 
 int main(void) {
@@ -336,25 +339,20 @@ int main(void) {
     config_switches() ;
     setup_logic(LOGIC_OR, &ic1_logic) ;
     enable_logic(&ic1_logic) ;
-    config_ints() ;
     config_spi() ;
     dma_setup() ;
-    
-    // Core timer enable and set interrupt priority
-    _CP0_BIS_CAUSE(_CP0_CAUSE_DC_MASK) ;
-    IPC0bits.CTIP = 5 ;
-    IPC0bits.CTIS = 0 ;
     
     for(i = 0 ; i < num_axes ; i++) {
         axes_mask |= axes_arr[i]->axis ;
         axis_setup(axes_arr[i]) ;
     }
     
-    // Report timeout fault
+    // Report timeout/brownout fault
     if (RCONbits.WDTO || RCONbits.BOR) {
         flags.ucont_fault = 1 ;
         RCONbits.WDTO = 0 ;
         RCONbits.BOR = 0 ;
+        led_off(&led_blue) ;
     }
               
     clear(&rxb) ;
@@ -364,6 +362,8 @@ int main(void) {
 
     // Enable Watchdog timer
     WDTCONbits.ON = 1 ;
+    
+    led_off(&led_red) ;
     
     while (1) {
         WDTCONSET = 1 ;
@@ -441,6 +441,11 @@ int main(void) {
                         _CP0_SET_COMPARE(core_count) ;
                         _CP0_BIC_CAUSE(_CP0_CAUSE_DC_MASK) ;
                         restoreInterrupts(int_store) ;
+                        
+                        config_ints() ;
+                        
+                        led_off(&led_red) ;
+                        led_on(&led_blue) ;
 
                         IFS0bits.CTIF = 0 ;
                         IEC0bits.CTIE = 1 ;
@@ -476,6 +481,8 @@ int main(void) {
             // Stop command: Deactivate all active axes and PWM channels
             case CMD_STP:
                 all_stop() ;
+                led_off(&led_red) ;
+                base_freq = 0 ;
                 break ;
             // switch (cmd)
             }
@@ -551,14 +558,15 @@ void all_stop() {
         pwm_deactivate(pwms[i]) ;
 
     IFS0bits.CTIF = 0 ;
+    
+    led_off(&led_blue) ;
+    led_on(&led_red) ;
 }
 
 void update_switches() {
     int32_t i ;
-    uint32_t state ;
     
     for (i = 0 ; i < num_switches ; i++) {
-        WDTCONSET = 1 ;
         switches[i]->state = *(switches[i]->port) & switches[i]->pin ;
         
         if(!switches[i]->state)
@@ -665,15 +673,20 @@ void clr_switch(uint32_t axis, uint32_t type) {
     }
 }
 
+// Emergency off interrupt handler, shutdown everything
 void __ISR(_EXTERNAL_0_VECTOR, IPL4AUTO) EmoHandler(void) {
     all_stop() ;
     flags.switch_emo = 1 ;
+    IFS0bits.INT0IF = 0 ;       // Clear EMO interrupt 
 }
 
+// Z-level interrupt, just raise the flag
 void __ISR(_EXTERNAL_1_VECTOR, IPL4AUTO) ZLevelHandler(void) {
     flags.z_level = 1 ;
+    IFS0bits.INT1IF = 0 ;       // Clear Z-Level interrupt 
 }
 
+// Motor fault interrupt, shutdown everything
 void __ISR(_EXTERNAL_2_VECTOR, IPL4AUTO) MotorFaultHandler(void) {
     int32_t * a ;
     
@@ -683,8 +696,11 @@ void __ISR(_EXTERNAL_2_VECTOR, IPL4AUTO) MotorFaultHandler(void) {
         if(*(axes_arr[*a]->fault_port) & axes_arr[*a]->fault_pin) 
             set_switch(axes_arr[*a]->axis, FAULT) ;
     }
+    
+    IFS0bits.INT2IF = 0 ;       // Clear motor fault interrupt 
 }
 
+// Limit switch triggered interrupt, just raise the matching flag
 void __ISR(_EXTERNAL_3_VECTOR, IPL4AUTO) SwitchHandler(void) {
     int32_t i ;
     
@@ -695,6 +711,8 @@ void __ISR(_EXTERNAL_3_VECTOR, IPL4AUTO) SwitchHandler(void) {
         if(switches[i]->state) 
             set_switch(switches[i]->axis, switches[i]->type) ;
     }
+    
+    IFS0bits.INT3IF = 0 ;       // Clear switches interrupt 
 }
 
 // Main timing interrupt
