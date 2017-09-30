@@ -25,9 +25,9 @@ typedef union {
 } duty_cycle_t ;
     
 typedef struct {
-    volatile unsigned int  *oc_con ;
-    volatile unsigned int  *oc_r ;
-    volatile unsigned int  *oc_rs ;
+    volatile unsigned int * const oc_con ;
+    volatile unsigned int * const oc_r ;
+    volatile unsigned int * const oc_rs ;
     unsigned int frequency ;
     
     unsigned int freq_src ;

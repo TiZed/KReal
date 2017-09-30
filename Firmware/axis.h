@@ -71,16 +71,16 @@ typedef struct {
     int64_t position ;
     int64_t old_position ;
     
-    volatile unsigned int  *tris_clr ;
-    volatile unsigned int  *port_set ;
-    volatile unsigned int  *port_clr ;
-    uint32_t en_pin ;
+    volatile unsigned int * const tris_clr ;
+    volatile unsigned int * const port_set ;
+    volatile unsigned int * const port_clr ;
+    const uint32_t en_pin ;
     uint32_t dir_pin ;
     uint32_t step_pin ;
     
-    volatile unsigned int  *fault_tris_set ;
-    volatile unsigned int  *fault_port ;
-    uint32_t fault_pin ;
+    volatile unsigned int * const fault_tris_set ;
+    volatile unsigned int * const fault_port ;
+    const uint32_t fault_pin ;
     
     uint32_t step_len ;
     uint32_t step_space ;

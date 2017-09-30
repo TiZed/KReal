@@ -114,6 +114,7 @@ static uint32_t num_active_pwm = 0 ;
 static const uint32_t num_axes = sizeof(axes_arr) / sizeof(axis_t *) ;
 static const uint32_t num_switches = sizeof(switches) / sizeof(switch_t *) ;
 static const uint32_t num_pwms = sizeof(pwms) / sizeof(pwm_t *) ;
+static const uint32_t num_leds = sizeof(leds) / sizeof(led_t *) ; 
 
 volatile cnc_flags_t flags = {0} ;
 
@@ -137,6 +138,10 @@ static void config_spi() {
     SPI2CONbits.MSTEN = 0 ;         // Slave mode
     SPI2CONbits.SSEN = 0 ;          // Disable slave select pin
     SPI2CONbits.ENHBUF = 1 ;        // Enable Enhanced buffer
+    
+    SPI2CONbits.STXISEL = 0b11 ;    // TX buffer not full interrupt mode
+    SPI2CONbits.SRXISEL = 0b01 ;    // RX buffer not empty interrupt mode
+    
     t = SPI2BUF ;                   // Clear buffer
     
     TRISGSET = BIT_9 ;              // Set SS pin as input
@@ -157,7 +162,7 @@ static void config_spi() {
     
     // Enable SPI Rx interrupt
     IEC1bits.SPI2TXIE = 0 ;
-    IEC1bits.SPI2RXIE = 1 ;
+    IEC1bits.SPI2RXIE = 0 ;
     IEC1bits.SPI2EIE = 0 ;
     
     // Enable SPI
@@ -187,6 +192,8 @@ static void dma_setup() {
     DCH0CSIZ = 4 ;                      // Set cell transfer to 4B
     DCH0DSIZ = BUFFER_SIZE ;            //
     
+    DCH0INTCLR = 0x00ff00ff ;           // Clear all Ch. 0 events
+    
     // Configure DMA Channel 1 for SPI Tx
     DCH1CONbits.CHEN = 0 ;              // Disable DMA Ch. 1
     DCH1CONbits.CHPRI = 3 ;             // DMA Ch. 1 set high priority (3)
@@ -196,11 +203,13 @@ static void dma_setup() {
     DCH1ECONbits.SIRQEN = 1 ;            // Enable DMA Ch. 1 start from IRQ
     
     DCH1SSA = (int) txb.data ;       // DMA Ch. 1 source address is the TX buffer
-    DCH1DSA = (int) &SPI2BUF ;       // DMA Ch. 0 destination address SPI2BUF
+    DCH1DSA = (int) &SPI2BUF ;       // DMA Ch. 1 destination address SPI2BUF
     
     DCH1DSIZ = 4 ;                      // 4B destination size (SPI2BUF)
     DCH1CSIZ = 4 ;                      // Set cell transfer to 4B
     DCH1SSIZ = BUFFER_SIZE ;            // 
+    
+    DCH1INTCLR = 0x00ff00ff ;           // Clear all Ch. 1 events
     
     DCH0CONbits.CHEN = 1 ;              // Enable channel 0
     DCH1CONbits.CHEN = 1 ;              // Enable channel 1    
@@ -316,6 +325,19 @@ void setup(void) {
     _CP0_BIS_CAUSE(_CP0_CAUSE_DC_MASK) ;
     IPC0bits.CTIP = 5 ;
     IPC0bits.CTIS = 0 ;
+    
+    // Timer1 Setup
+    T1CONbits.ON = 0 ;            // Disable Timer1
+    T1CONbits.TCS = 1 ;           // Use external secondary oscillator
+    T1CONbits.TCKPS = 0b11 ;      // Set prescale to 256 = 128 beats/sec.
+    PR1 = 32 ;                    // Cycle every 1/4 sec.
+    
+    IPC1bits.T1IP = 1 ;           // Low priority RT interrupt
+    IPC1bits.T1IS = 0 ;
+    
+    IFS0bits.T1IF = 0 ;           // Clear Timer1 interrupt
+    IEC0bits.T1IE = 1 ;           // Enable Timer1 interrupt ;
+    T1CONbits.ON = 1 ;            // Enable Timer1 ; 
 }
 
 int main(void) {
@@ -339,8 +361,8 @@ int main(void) {
     config_switches() ;
     setup_logic(LOGIC_OR, &ic1_logic) ;
     enable_logic(&ic1_logic) ;
-    config_spi() ;
     dma_setup() ;
+    config_spi() ;
     
     for(i = 0 ; i < num_axes ; i++) {
         axes_mask |= axes_arr[i]->axis ;
@@ -357,6 +379,8 @@ int main(void) {
               
     clear(&rxb) ;
     clear(&txb) ;
+    
+    for(i = 0 ; i < txb.size ; txb.data[i++] = 0xff00ff00) ;
     
     enableInterrupts() ;
 
@@ -444,8 +468,8 @@ int main(void) {
                         
                         config_ints() ;
                         
-                        led_off(&led_red) ;
-                        led_on(&led_blue) ;
+                        led_on(&led_red) ;
+                        led_blink(&led_blue, LED_BLINK_SLOW) ;
 
                         IFS0bits.CTIF = 0 ;
                         IEC0bits.CTIE = 1 ;
@@ -724,5 +748,17 @@ void __ISR(_CORE_TIMER_VECTOR, IPL5AUTO) CoreTimerHandler(void) {
     
     stepgen(axes_arr, active_axes) ;
     
-    IFS0bits.CTIF = 0 ;
+    IFS0bits.CTIF = 0 ;         // Clear Core Timer interrupt
+}
+
+// Real time clock timer, should trigger every 1/4 sec. 
+void __ISR(_TIMER_1_VECTOR, IPL1AUTO) RTimer(void) {
+    int i = 0 ;
+    
+    while (i < num_leds) {
+        if(leds[i]->state >= LED_BLINK_FAST) _led_blink_check(leds[i]) ;
+        i++ ;
+    }
+    
+    IFS0bits.T1IF = 0 ;         // Clear Timer1 interrupt
 }
