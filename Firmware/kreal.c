@@ -153,7 +153,8 @@ static void config_spi() {
 //    IPC7bits.SPI2IS = 0 ;
     
     // Clear RX overflow flag
-    SPI2STATbits.SPIROV = 0 ;
+    SPI2STATCLR = _SPI2STAT_SPIROV_MASK ;
+//    SPI2STATbits.SPIROV = 0 ;
     
     // Clear SPI interrupt flags 
     IFS1bits.SPI2RXIF = 0 ;
@@ -185,12 +186,12 @@ static void dma_setup() {
     DCH0ECONbits.CHSIRQ = _SPI2_RX_IRQ ; // Set DMA Ch. 0 start IRQ from SPI2 Rx
     DCH0ECONbits.SIRQEN = 1 ;            // Enable DMA Ch. 0 start from IRQ
     
-    DCH0SSA = (int) &SPI2BUF ;       // DMA Ch. 0 source address is SPI2 Buffer
-    DCH0DSA = (int) rxb.data ;       // DMA Ch. 0 destination address is RX buffer
+    DCH0SSA = (unsigned int) &SPI2BUF ;       // DMA Ch. 0 source address is SPI2 Buffer
+    DCH0DSA = (unsigned int) rxb.data ;       // DMA Ch. 0 destination address is RX buffer
     
     DCH0SSIZ = 4 ;                      // 4B source size (SPI2BUF)
     DCH0CSIZ = 4 ;                      // Set cell transfer to 4B
-    DCH0DSIZ = BUFFER_SIZE ;            //
+    DCH0DSIZ = 4 * BUFFER_SIZE ;        //
     
     DCH0INTCLR = 0x00ff00ff ;           // Clear all Ch. 0 events
     
@@ -202,12 +203,12 @@ static void dma_setup() {
     DCH1ECONbits.CHSIRQ = _SPI2_TX_IRQ ; // Set DMA Ch. 1 start IRQ from SPI2 Tx
     DCH1ECONbits.SIRQEN = 1 ;            // Enable DMA Ch. 1 start from IRQ
     
-    DCH1SSA = (int) txb.data ;       // DMA Ch. 1 source address is the TX buffer
-    DCH1DSA = (int) &SPI2BUF ;       // DMA Ch. 1 destination address SPI2BUF
+    DCH1SSA = (unsigned int) txb.data ;       // DMA Ch. 1 source address is the TX buffer
+    DCH1DSA = (unsigned int) &SPI2BUF ;       // DMA Ch. 1 destination address SPI2BUF
     
     DCH1DSIZ = 4 ;                      // 4B destination size (SPI2BUF)
     DCH1CSIZ = 4 ;                      // Set cell transfer to 4B
-    DCH1SSIZ = BUFFER_SIZE ;            // 
+    DCH1SSIZ = 4 * BUFFER_SIZE ;        // 
     
     DCH1INTCLR = 0x00ff00ff ;           // Clear all Ch. 1 events
     
@@ -399,7 +400,7 @@ int main(void) {
                 
             // Configure command: configure frequency and axes
             case CMD_CFG:
-                IEC0bits.CTIE = 0 ;
+                IEC0CLR = _IEC0_CTIE_MASK ;
                
                 base_freq = pop(&rxb) ;
                 checksum ^= base_freq ;
@@ -471,8 +472,8 @@ int main(void) {
                         led_on(&led_red) ;
                         led_blink(&led_blue, LED_BLINK_SLOW) ;
 
-                        IFS0bits.CTIF = 0 ;
-                        IEC0bits.CTIE = 1 ;
+                        IFS0CLR = _IFS0_CTIF_MASK ; 
+                        IEC0SET = _IEC0_CTIE_MASK ;
                     }
                 }
 
@@ -480,7 +481,8 @@ int main(void) {
 
             // Update command: Update velocity and PWM, send position and flags.
             case CMD_UPD:
-                IEC0bits.CTIE = 0 ;
+                IEC0CLR = _IEC0_CTIE_MASK ;
+                // IEC0bits.CTIE = 0 ;
               
                 for (a = active_axes ; *a != -1 ; a++) {
                     axes_arr[*a]->velocity = pop(&rxb) ; 
@@ -499,7 +501,7 @@ int main(void) {
                     all_stop() ;
                 }
                 else
-                    IEC0bits.CTIE = 1 ;
+                    IEC0SET = _IEC0_CTIE_MASK ;
                 break ;
 
             // Stop command: Deactivate all active axes and PWM channels
@@ -516,20 +518,20 @@ int main(void) {
         }
         
         else {
-            spi_cs_current = PORTG & BIT_9 ;
+            spi_cs_current = PORTG & _PORTG_RG9_MASK ;
             
             // Check if transmit is done (rise of CS)
             if(!spi_cs_last && spi_cs_current) { 
-                DCH0CONbits.CHEN = 0 ;              // Suspend DMA channel 0
-                DCH1CONbits.CHEN = 0 ;              // Suspend DMA channel 1
+                DCH0CONCLR = _DCH0CON_CHEN_MASK ;   // Suspend DMA channel 0
+                DCH1CONCLR = _DCH1CON_CHEN_MASK ;   // Suspend DMA channel 1
                 
-                set_head(&rxb, DCH0DPTR) ;          // Realign RX buffer head
-                set_tail(&txb, DCH1SPTR) ;          // Realign TX buffer tail
+                set_head(&rxb, DCH0DPTR >> 2) ;      // Realign RX buffer head
+                set_tail(&txb, DCH1SPTR >> 2) ;      // Realign TX buffer tail
                 
                 cmd = pop(&rxb) ;                   // Get new command
                 
-                DCH0CONbits.CHEN = 1 ;              // Release DMA channel 0
-                DCH1CONbits.CHEN = 1 ;              // Release DMA channel 1
+                DCH0CONSET = _DCH0CON_CHEN_MASK ;   // Release DMA channel 0
+                DCH1CONSET = _DCH1CON_CHEN_MASK ;   // Release DMA channel 1
             }
             
             else {
@@ -547,9 +549,9 @@ int main(void) {
 
                     // Place positions of all axes
                     for (a = active_axes ; *a != -1 ; a++) {
-                        IEC0bits.CTIE = 0 ;             // Suspend stepgen interrupt
+                        IEC0CLR = _IEC0_CTIE_MASK ;  // Suspend stepgen interrupt
                         pos = axes_arr[*a]->position ; 
-                        IEC0bits.CTIE = 1 ;             // Release stepgen interrupt
+                        IEC0SET = _IEC0_CTIE_MASK ;  // Release stepgen interrupt
 
                         push(&txb, pos >> 32) ;
                         chks ^= pos >> 32 ;
@@ -572,7 +574,7 @@ void all_stop() {
     int32_t * a ;
     int32_t i ; 
     
-    IEC0bits.CTIE = 0 ;
+    IEC0CLR = _IEC0_CTIE_MASK ;
     _CP0_BIS_CAUSE(_CP0_CAUSE_DC_MASK) ;
 
     for (a = active_axes ; *a != -1 ; a++)
@@ -581,7 +583,7 @@ void all_stop() {
     for (i = 0 ; i < num_active_pwm ; i++) 
         pwm_deactivate(pwms[i]) ;
 
-    IFS0bits.CTIF = 0 ;
+    IFS0CLR = _IFS0_CTIF_MASK ;
     
     led_off(&led_blue) ;
     led_on(&led_red) ;
@@ -701,13 +703,13 @@ void clr_switch(uint32_t axis, uint32_t type) {
 void __ISR(_EXTERNAL_0_VECTOR, IPL4AUTO) EmoHandler(void) {
     all_stop() ;
     flags.switch_emo = 1 ;
-    IFS0bits.INT0IF = 0 ;       // Clear EMO interrupt 
+    IFS0CLR = _IFS0_INT0IF_MASK ;  // Clear EMO interrupt  
 }
 
 // Z-level interrupt, just raise the flag
 void __ISR(_EXTERNAL_1_VECTOR, IPL4AUTO) ZLevelHandler(void) {
     flags.z_level = 1 ;
-    IFS0bits.INT1IF = 0 ;       // Clear Z-Level interrupt 
+    IFS0CLR = _IFS0_INT1IF_MASK ;  // Clear Z-Level interrupt       
 }
 
 // Motor fault interrupt, shutdown everything
@@ -721,7 +723,7 @@ void __ISR(_EXTERNAL_2_VECTOR, IPL4AUTO) MotorFaultHandler(void) {
             set_switch(axes_arr[*a]->axis, FAULT) ;
     }
     
-    IFS0bits.INT2IF = 0 ;       // Clear motor fault interrupt 
+    IFS0CLR = _IFS0_INT2IF_MASK ;  // Clear motor fault interrupt      
 }
 
 // Limit switch triggered interrupt, just raise the matching flag
@@ -736,7 +738,7 @@ void __ISR(_EXTERNAL_3_VECTOR, IPL4AUTO) SwitchHandler(void) {
             set_switch(switches[i]->axis, switches[i]->type) ;
     }
     
-    IFS0bits.INT3IF = 0 ;       // Clear switches interrupt 
+    IFS0CLR = _IFS0_INT3IF_MASK ;  // Clear switches interrupt       
 }
 
 // Main timing interrupt
@@ -748,7 +750,7 @@ void __ISR(_CORE_TIMER_VECTOR, IPL5AUTO) CoreTimerHandler(void) {
     
     stepgen(axes_arr, active_axes) ;
     
-    IFS0bits.CTIF = 0 ;         // Clear Core Timer interrupt
+    IFS0CLR = _IFS0_CTIF_MASK ;   // Clear Core Timer interrupt         
 }
 
 // Real time clock timer, should trigger every 1/4 sec. 
@@ -760,5 +762,5 @@ void __ISR(_TIMER_1_VECTOR, IPL1AUTO) RTimer(void) {
         i++ ;
     }
     
-    IFS0bits.T1IF = 0 ;         // Clear Timer1 interrupt
+    IFS0CLR = _IFS0_T1IF_MASK ;   // Clear Timer1 interrupt 
 }
