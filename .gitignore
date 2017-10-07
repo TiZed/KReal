@@ -16,3 +16,4 @@ MPLABXLog.xml*
 # ignore production zip files
 *.zip
 
+/Firmware/dist/default/

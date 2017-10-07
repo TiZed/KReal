@@ -34,7 +34,7 @@ typedef struct {
     unsigned int on_state ; 
     unsigned int state ;
     
-    unsigned int blink_timer ;
+    int blink_timer ;
 } led_t ;
 
 #define DEF_LED(NAME, PRT, PIN, ON_STATE) \
@@ -42,37 +42,35 @@ typedef struct {
                           &PORT ## PRT ## SET, &PORT ## PRT ## INV, \
                           PIN, ON_STATE, LED_OFF, 0}
 
-void led_off(led_t * led) {
+void led_off(led_t * const led) {
     if(led->on_state) *(led->port_clr) = led->pin ;
     else *(led->port_set) = led->pin ;
     
     led->state = LED_OFF ;
 }
 
-void led_on(led_t * led) {
+void led_on(led_t * const led) {
     if(led->on_state) *(led->port_set) = led->pin ;
     else *(led->port_clr) = led->pin ;
     
     led->state = LED_ON ;
 }
 
-void led_blink(led_t * led, unsigned int blink_speed) {
+void led_blink(led_t * const led, unsigned int blink_speed) {
     led->state = blink_speed ;
+    led->blink_timer = 0 ;
 }
 
-
-void setup_led(led_t * led) {
+void setup_led(led_t * const led) {
     *(led->tris_clr) = led->pin ;
     led_off(led) ;
 }
 
-void _led_blink_check(led_t * led) {
-    if(!led->blink_timer) {
+void _led_blink_check(led_t * const led) {
+    if (led->blink_timer-- == 0) {
         *(led->port_inv) = led->pin ;
-        
-        led->blink_timer = (led->state == LED_BLINK_FAST) ? 2:4 ;
+        led->blink_timer = (led->state == LED_BLINK_FAST) ? 2:5 ;
     }
-    else led->blink_timer-- ;
 }
 
 #ifdef	__cplusplus

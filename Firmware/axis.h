@@ -103,7 +103,7 @@ typedef struct {
                                    2, 2, 1, 0, DIR_HOLD, 0, 0}                       
 
     
-void stepgen(axis_t * const* axes, int32_t * active_axes) ;
+void stepgen(axis_t * const * axes, int32_t * active_axes) ;
 void axis_activate(axis_t * const axis) ;
 void axis_deactivate(axis_t * const axis) ;
 void axis_setup(axis_t * const axis) ;

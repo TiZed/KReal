@@ -71,6 +71,11 @@ void __attribute__((nomips16))  restoreInterrupts(uint32_t st)
     else asm volatile("di") ;
 }
 
+extern __inline__ unsigned int __attribute__((always_inline)) _VirtToPhys(const void * p)
+{
+    return (int)p < 0 ? ((int)p & 0x1fffffffL) : (unsigned int)((unsigned char*)p + 0x40000000L);
+}
+
 #ifdef	__cplusplus
 }
 #endif

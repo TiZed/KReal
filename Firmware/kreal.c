@@ -94,6 +94,8 @@ switch_t * const switches[] = {&switch_X_LIMIT, &switch_X_HOME,
 ADD_PWM(spindle, OC2, TIMER2, 1) ;
 ADD_PWM(laser,   OC3, TIMER3, 1) ;
 
+pwm_t * const pwms[] = {&pwm_spindle, &pwm_laser} ;
+
 // LEDs
 
 DEF_LED(red, F, BIT_1, LED_HIGH) ;
@@ -103,18 +105,16 @@ led_t * const leds[] = {&led_red, &led_blue} ;
 
 SET_CD4048B(ic1, E, BIT_4, E, BIT_5, E, BIT_6, E, BIT_7) ;
 
-pwm_t * const pwms[] = {&pwm_spindle, &pwm_laser} ;
-
 static uint32_t axes_mask = 0,  num_active_axes = 0, active_axes_mask = 0 ;
 static uint32_t core_count = 0 ;
 static int32_t active_axes[8] = {-1} ;
 
 static uint32_t num_active_pwm = 0 ;
 
-static const uint32_t num_axes = sizeof(axes_arr) / sizeof(axis_t *) ;
-static const uint32_t num_switches = sizeof(switches) / sizeof(switch_t *) ;
-static const uint32_t num_pwms = sizeof(pwms) / sizeof(pwm_t *) ;
-static const uint32_t num_leds = sizeof(leds) / sizeof(led_t *) ; 
+const uint32_t num_axes = sizeof(axes_arr) / sizeof(axis_t *) ;
+const uint32_t num_switches = sizeof(switches) / sizeof(switch_t *) ;
+const uint32_t num_pwms = sizeof(pwms) / sizeof(pwm_t *) ;
+const uint32_t num_leds = sizeof(leds) / sizeof(led_t *) ; 
 
 volatile cnc_flags_t flags = {0} ;
 
@@ -132,20 +132,24 @@ static void config_spi() {
     int t ;
     
     SPI2CON = 0x0 ;
-    SPI2CONbits.MODE32 = 1 ;        // 32-bit mode
-    SPI2CONbits.CKP = 0 ;           // Clock polarity
-    SPI2CONbits.CKE = 1 ;           // Clock edge select
-    SPI2CONbits.MSTEN = 0 ;         // Slave mode
-    SPI2CONbits.SSEN = 0 ;          // Disable slave select pin
-    SPI2CONbits.ENHBUF = 1 ;        // Enable Enhanced buffer
     
-    SPI2CONbits.STXISEL = 0b11 ;    // TX buffer not full interrupt mode
-    SPI2CONbits.SRXISEL = 0b01 ;    // RX buffer not empty interrupt mode
+    // Clear SPI interrupt flags 
+    IFS1CLR = _IFS1_SPI2RXIF_MASK | _IFS1_SPI2TXIF_MASK | _IFS1_SPI2EIF_MASK ;
+   
+    // SPI Interrupts
+    IEC1CLR = _IEC1_SPI2RXIE_MASK | _IEC1_SPI2TXIE_MASK | _IEC1_SPI2RXIE_MASK ;
     
     t = SPI2BUF ;                   // Clear buffer
     
-    TRISGSET = BIT_9 ;              // Set SS pin as input
-    spi_cs_current = PORTG & BIT_9 ;
+    // SPI 32-bit, slave mode with enhanced buffer
+    // TX buffer not full interrupt mode
+    // RX buffer not empty interrupt mode
+    SPI2CONSET = _SPI2CON_MODE32_MASK | _SPI2CON_CKE_MASK |// _SPI2CON_ENHBUF_MASK |
+                 (0b11 << _SPI2CON_STXISEL_POSITION) |
+                 (0b01 << _SPI2CON_SRXISEL_POSITION);
+    
+    TRISGSET = _TRISG_TRISG9_MASK ;              // Set SS pin as input
+    spi_cs_current = PORTG & _PORTG_RG9_MASK ;
     spi_cs_last = spi_cs_current ;
     
     // SPI Interrupt priority 2, sub-priority 0
@@ -154,66 +158,64 @@ static void config_spi() {
     
     // Clear RX overflow flag
     SPI2STATCLR = _SPI2STAT_SPIROV_MASK ;
-//    SPI2STATbits.SPIROV = 0 ;
-    
-    // Clear SPI interrupt flags 
-    IFS1bits.SPI2RXIF = 0 ;
-    IFS1bits.SPI2TXIF = 0 ;
-    IFS1bits.SPI2EIF = 0 ;
-    
-    // Enable SPI Rx interrupt
-    IEC1bits.SPI2TXIE = 0 ;
-    IEC1bits.SPI2RXIE = 0 ;
-    IEC1bits.SPI2EIE = 0 ;
     
     // Enable SPI
-    SPI2CONbits.ON = 1 ;
+    SPI2CONSET = _SPI2CON_ON_MASK ;
 }
 
 static void dma_setup() {
-    IEC1bits.DMA0IE = 0 ;       // Disable DMA Ch. 0 Interrupt
-    IEC1bits.DMA1IE = 0 ;       // Disable DMA Ch. 1 Interrupt
-    IFS1bits.DMA0IF = 0 ;       // Clear and DMA Ch. 0 pending interrupts
-    IFS1bits.DMA1IF = 0 ;       // Clear and DMA Ch. 1 pending interrupts
+    DMACONSET = _DMACON_ON_MASK ;         // Turn DMA controller on
     
-    DMACONbits.ON = 1 ;         // Turn DMA controller on
+    // Disable DMA Ch. 0 & 1 Interrupt
+    IEC1CLR = _IEC1_DMA0IE_MASK | _IEC1_DMA1IE_MASK ;
+    
+    // Clear and DMA Ch. 0 & 1 pending interrupts
+    IFS1CLR = _IFS1_DMA0IF_MASK | _IFS1_DMA1IF_MASK ;
+    
+    // Set DMA Ch. 0 & 1 to interrupt priority 3
+    IPC9SET = (3 << _IPC9_DMA0IP_POSITION) | (3 << _IPC9_DMA0IS_POSITION) ;
+    IPC9SET = (3 << _IPC9_DMA1IP_POSITION) | (2 << _IPC9_DMA1IS_POSITION) ;
     
     // Configure DMA Channel 0 for SPI Rx
-    DCH0CONbits.CHEN = 0 ;              // Disable DMA Ch. 0
-    DCH0CONbits.CHPRI = 2 ;             // DMA Ch. 0 set mid priority (2)
-    DCH0CONbits.CHAEN = 1 ;             // DMA Ch. 0 automatic open
     
-    DCH0ECONbits.CHSIRQ = _SPI2_RX_IRQ ; // Set DMA Ch. 0 start IRQ from SPI2 Rx
-    DCH0ECONbits.SIRQEN = 1 ;            // Enable DMA Ch. 0 start from IRQ
+    // Disable ch. 0 set priority 2, automatic open
+    DCH0CON = (2 << _DCH0CON_CHPRI_POSITION) | _DCH0CON_CHAEN_MASK ;
     
-    DCH0SSA = (unsigned int) &SPI2BUF ;       // DMA Ch. 0 source address is SPI2 Buffer
-    DCH0DSA = (unsigned int) rxb.data ;       // DMA Ch. 0 destination address is RX buffer
+    // Set DMA Ch. 0 start IRQ from SPI2 Rx
+    DCH0ECON = (_SPI2_RX_IRQ << _DCH0ECON_CHSIRQ_POSITION) | _DCH0ECON_SIRQEN_MASK ;
+    
+    DCH0SSA = _VirtToPhys(&SPI2BUF) ;   // DMA Ch. 0 source address is SPI2 Buffer
+    DCH0DSA = _VirtToPhys(rxb.data) ;   // DMA Ch. 0 destination address is RX buffer
     
     DCH0SSIZ = 4 ;                      // 4B source size (SPI2BUF)
     DCH0CSIZ = 4 ;                      // Set cell transfer to 4B
-    DCH0DSIZ = 4 * BUFFER_SIZE ;        //
+    DCH0DSIZ = 4 * rxb.size ;           //
     
     DCH0INTCLR = 0x00ff00ff ;           // Clear all Ch. 0 events
+    DCH0INTSET = _DCH0INT_CHERIE_MASK ; // Enable Address error interrupt
     
     // Configure DMA Channel 1 for SPI Tx
-    DCH1CONbits.CHEN = 0 ;              // Disable DMA Ch. 1
-    DCH1CONbits.CHPRI = 3 ;             // DMA Ch. 1 set high priority (3)
-    DCH1CONbits.CHAEN = 1 ;             // DMA Ch. 1 automatic open
     
-    DCH1ECONbits.CHSIRQ = _SPI2_TX_IRQ ; // Set DMA Ch. 1 start IRQ from SPI2 Tx
-    DCH1ECONbits.SIRQEN = 1 ;            // Enable DMA Ch. 1 start from IRQ
-    
-    DCH1SSA = (unsigned int) txb.data ;       // DMA Ch. 1 source address is the TX buffer
-    DCH1DSA = (unsigned int) &SPI2BUF ;       // DMA Ch. 1 destination address SPI2BUF
+    // Disable ch. 1 set priority 3, automatic open
+    DCH1CON = (3 << _DCH1CON_CHPRI_POSITION) | _DCH1CON_CHAEN_MASK ;
+  
+    // Set DMA Ch. 1 start IRQ from SPI2 Tx
+    DCH1ECON = (_SPI2_TX_IRQ << _DCH1ECON_CHSIRQ_POSITION) | _DCH1ECON_SIRQEN_MASK ;
+   
+    DCH1SSA = _VirtToPhys(txb.data) ;   // DMA Ch. 1 source address is the TX buffer
+    DCH1DSA = _VirtToPhys(&SPI2BUF) ;   // DMA Ch. 1 destination address SPI2BUF
     
     DCH1DSIZ = 4 ;                      // 4B destination size (SPI2BUF)
     DCH1CSIZ = 4 ;                      // Set cell transfer to 4B
-    DCH1SSIZ = 4 * BUFFER_SIZE ;        // 
+    DCH1SSIZ = 4 * txb.size ;           // 
     
     DCH1INTCLR = 0x00ff00ff ;           // Clear all Ch. 1 events
+    DCH1INTSET = _DCH1INT_CHERIE_MASK ; // Enable Address error interrupt
     
-    DCH0CONbits.CHEN = 1 ;              // Enable channel 0
-    DCH1CONbits.CHEN = 1 ;              // Enable channel 1    
+    IEC1SET = _IEC1_DMA0IE_MASK | _IEC1_DMA1IE_MASK ;
+    
+    DCH0CONSET = _DCH0CON_CHEN_MASK ;   // Enable channel 0
+    DCH1CONSET = _DCH1CON_CHEN_MASK ;   // Enable channel 1              
 }
 
 void config_switches() {
@@ -241,44 +243,33 @@ void config_switches() {
 }
 
 void config_ints() {
-    IEC0bits.INT0IE = 0 ;
-    IEC0bits.INT1IE = 0 ;
-    IEC0bits.INT2IE = 0 ;
-    IEC0bits.INT3IE = 0 ;
+    IEC0CLR = _IEC0_INT0IE_MASK | _IEC0_INT1IE_MASK | _IEC0_INT2IE_MASK | _IEC0_INT3IE_MASK ;
     
     TRISDSET = BIT_0 | BIT_8 | BIT_9 | BIT_10 ;   // Set INT0-3 pinw as input
     
-    INTCONbits.INT0EP = 1 ;     // Set falling edge for EMO.
-    INTCONbits.INT1EP = 1 ;     // Set falling edge for Z-Level.
-    INTCONbits.INT2EP = 0 ;     // Set raising edge for motor faults.
-    INTCONbits.INT3EP = 0 ;     // Set falling edge for switches.
+    // Set falling edge for EMO & Z-Level
+    INTCONSET = _INTCON_INT0EP_MASK | _INTCON_INT1EP_MASK ;
+   
+    // Set raising edge for motor faults & switches
+    INTCONCLR = _INTCON_INT2EP_MASK | _INTCON_INT3EP_MASK ;
     
-    IFS0bits.INT0IF = 0 ;       // Clear INT0 interrupt 
-    IFS0bits.INT1IF = 0 ;       // Clear INT1 interrupt
-    IFS0bits.INT2IF = 0 ;       // Clear INT2 interrupt
-    IFS0bits.INT3IF = 0 ;       // Clear INT3 interrupt
-    
+    // Clear all pending external interrupts
+    IFS0CLR = _IFS0_INT0IF_MASK | _IFS0_INT1IF_MASK | _IFS0_INT2IF_MASK | _IFS0_INT3IF_MASK ;
+   
     // Set external interrupts priority
-    IPC0bits.INT0IP = 4 ;
-    IPC0bits.INT0IS = 3 ;
-    
-    IPC1bits.INT1IP = 4 ;
-    IPC1bits.INT1IS = 0 ;
-    
-    IPC2bits.INT2IP = 4 ;
-    IPC2bits.INT2IS = 2 ;
-    
-    IPC3bits.INT3IP = 4 ;
-    IPC3bits.INT3IS = 1 ;
-    
-    IEC0bits.INT0IE = 1 ;
-    IEC0bits.INT1IE = 1 ;
-    IEC0bits.INT2IE = 1 ;
-    IEC0bits.INT3IE = 1 ;
+    IPC0SET = (4 << _IPC0_INT0IP_POSITION) | (3 << _IPC0_INT0IS_POSITION) ;
+    IPC1SET = (4 << _IPC1_INT1IP_POSITION) | (0 << _IPC1_INT1IS_POSITION) ;
+    IPC2SET = (4 << _IPC2_INT2IP_POSITION) | (2 << _IPC2_INT2IS_POSITION) ;
+    IPC3SET = (4 << _IPC3_INT3IP_POSITION) | (1 << _IPC3_INT3IS_POSITION) ;
+     
+    // Enable external interrupts
+    IEC0SET = _IEC0_INT0IE_MASK | _IEC0_INT1IE_MASK | _IEC0_INT2IE_MASK | _IEC0_INT3IE_MASK ;
 }
 
 void setup(void) {
     uint32_t wait_states, cache_reg, sys_freq, tmp ;
+    
+    disableInterrupts() ;
     
     // Set cache wait states and enable predictive prefetch
     sys_freq = SYS_FREQ ;
@@ -299,17 +290,17 @@ void setup(void) {
 	tmp = (tmp & ~7) | 3;
 	asm("mtc0 %0,$16,0" :: "r" (tmp));
     
-    
-    tmp = OSCCON ;
-    tmp &= ~_OSCCON_PBDIV_MASK ;   // Set peripherals clock to sys_clk
-    tmp |= _OSCCON_SOSCEN_MASK ;   // Enable 32.768 kHz secondary clock 
+//    tmp = OSCCON ;
+//    tmp &= ~_OSCCON_PBDIV_MASK ;   // Set peripherals clock to sys_clk
+//    tmp |= _OSCCON_SOSCEN_MASK ;   // Enable 32.768 kHz secondary clock 
     
     SYSKEY = 0 ;                   // Unlock sequence
     SYSKEY = 0xAA996655 ; 
     SYSKEY = 0x556699AA ;  
     
-    OSCCON = tmp ;
-    tmp = OSCCON ;
+    OSCCONSET = _OSCCON_SOSCEN_MASK ;
+//    OSCCON = tmp ;
+//    tmp = OSCCON ;
     
     SYSKEY = 0 ;                   // Lock
     
@@ -320,7 +311,10 @@ void setup(void) {
     
     INTCONSET = _INTCON_MVEC_MASK ; 
     
+    enableInterrupts() ;
+    
     AD1PCFGSET = 0xffff ;         // Make all AN pins digital
+    CNPUE = 0 ;                   // Disable all pull-ups
     
     // Core timer enable and set interrupt priority
     _CP0_BIS_CAUSE(_CP0_CAUSE_DC_MASK) ;
@@ -328,17 +322,22 @@ void setup(void) {
     IPC0bits.CTIS = 0 ;
     
     // Timer1 Setup
-    T1CONbits.ON = 0 ;            // Disable Timer1
-    T1CONbits.TCS = 1 ;           // Use external secondary oscillator
-    T1CONbits.TCKPS = 0b11 ;      // Set prescale to 256 = 128 beats/sec.
-    PR1 = 32 ;                    // Cycle every 1/4 sec.
+    T1CON = 0 ;                   // Disable Timer1
+    TMR1 = 0 ;                    // Reset Timer1
+    
+    // Use external secondary oscillator
+    // Set prescaler to 256 = 128 beats/sec.
+    // TODO: Check why secondary oscillator is not working
+    T1CONSET =  (0b11 << _T1CON_TCKPS_POSITION) ; // _T1CON_TCS_MASK |
+    PR1 = 0x7a13 ;                    // Cycle every 0.1sec. (should be 0.25sec.)
     
     IPC1bits.T1IP = 1 ;           // Low priority RT interrupt
     IPC1bits.T1IS = 0 ;
     
-    IFS0bits.T1IF = 0 ;           // Clear Timer1 interrupt
-    IEC0bits.T1IE = 1 ;           // Enable Timer1 interrupt ;
-    T1CONbits.ON = 1 ;            // Enable Timer1 ; 
+    IFS0CLR = _IFS0_T1IF_MASK ;   // Clear Timer1 interrupt
+    IEC0SET = _IEC0_T1IE_MASK ;   // Enable Timer1 interrupt
+  
+    T1CONSET = _T1CON_ON_MASK ;      // Enable Timer1 ;            
 }
 
 int main(void) {
@@ -348,11 +347,7 @@ int main(void) {
     int32_t * a ;
     int64_t pos ;
     
-    disableInterrupts() ;
     setup() ;
-    
-    // Disable all pull-ups
-    CNPUE = 0 ;
     
     setup_led(&led_red) ;
     setup_led(&led_blue) ;
@@ -362,8 +357,16 @@ int main(void) {
     config_switches() ;
     setup_logic(LOGIC_OR, &ic1_logic) ;
     enable_logic(&ic1_logic) ;
-    dma_setup() ;
+    
+    clear(&rxb) ;
+    clear(&txb) ;
+    
+    for(i = 0 ; i < txb.size ; txb.data[i++] = 0xff00ff00) ;
+    
     config_spi() ;
+    dma_setup() ;
+    
+//    SPI2BUF = flags.all ;
     
     for(i = 0 ; i < num_axes ; i++) {
         axes_mask |= axes_arr[i]->axis ;
@@ -378,13 +381,6 @@ int main(void) {
         led_off(&led_blue) ;
     }
               
-    clear(&rxb) ;
-    clear(&txb) ;
-    
-    for(i = 0 ; i < txb.size ; txb.data[i++] = 0xff00ff00) ;
-    
-    enableInterrupts() ;
-
     // Enable Watchdog timer
     WDTCONbits.ON = 1 ;
     
@@ -401,7 +397,7 @@ int main(void) {
             // Configure command: configure frequency and axes
             case CMD_CFG:
                 IEC0CLR = _IEC0_CTIE_MASK ;
-               
+                
                 base_freq = pop(&rxb) ;
                 checksum ^= base_freq ;
                 
@@ -449,6 +445,7 @@ int main(void) {
                 // TODO: checksum check here
                 chks = pop(&rxb) ;
                 if(chks != checksum) {
+                    led_blink(&led_red, LED_BLINK_SLOW) ;
                     flags.xsum_error = 1 ;
                     base_freq = 0 ;
                 }
@@ -465,11 +462,10 @@ int main(void) {
                         _CP0_SET_COUNT(0) ;
                         _CP0_SET_COMPARE(core_count) ;
                         _CP0_BIC_CAUSE(_CP0_CAUSE_DC_MASK) ;
-                        restoreInterrupts(int_store) ;
                         
                         config_ints() ;
+                        restoreInterrupts(int_store) ;
                         
-                        led_on(&led_red) ;
                         led_blink(&led_blue, LED_BLINK_SLOW) ;
 
                         IFS0CLR = _IFS0_CTIF_MASK ; 
@@ -482,7 +478,6 @@ int main(void) {
             // Update command: Update velocity and PWM, send position and flags.
             case CMD_UPD:
                 IEC0CLR = _IEC0_CTIE_MASK ;
-                // IEC0bits.CTIE = 0 ;
               
                 for (a = active_axes ; *a != -1 ; a++) {
                     axes_arr[*a]->velocity = pop(&rxb) ; 
@@ -524,6 +519,8 @@ int main(void) {
             if(!spi_cs_last && spi_cs_current) { 
                 DCH0CONCLR = _DCH0CON_CHEN_MASK ;   // Suspend DMA channel 0
                 DCH1CONCLR = _DCH1CON_CHEN_MASK ;   // Suspend DMA channel 1
+                
+                while(DCH0CON & _DCH0CON_CHBUSY_MASK || DCH1CON & _DCH1CON_CHBUSY_MASK) ;
                 
                 set_head(&rxb, DCH0DPTR >> 2) ;      // Realign RX buffer head
                 set_tail(&txb, DCH1SPTR >> 2) ;      // Realign TX buffer tail
@@ -755,12 +752,29 @@ void __ISR(_CORE_TIMER_VECTOR, IPL5AUTO) CoreTimerHandler(void) {
 
 // Real time clock timer, should trigger every 1/4 sec. 
 void __ISR(_TIMER_1_VECTOR, IPL1AUTO) RTimer(void) {
-    int i = 0 ;
-    
+    int32_t i = 0 ;
+      
     while (i < num_leds) {
         if(leds[i]->state >= LED_BLINK_FAST) _led_blink_check(leds[i]) ;
         i++ ;
     }
     
     IFS0CLR = _IFS0_T1IF_MASK ;   // Clear Timer1 interrupt 
+}
+
+// Blink Red LED on DMA Tx or Rx address error
+void __ISR(_DMA0_VECTOR, IPL3AUTO) RxDMAError(void) {
+    
+    flags.xsum_error = 1 ;
+    led_blink(&led_red, LED_BLINK_FAST) ;
+    
+    IFS1CLR = _IFS1_DMA0IF_MASK ;
+}
+
+void __ISR(_DMA1_VECTOR, IPL3AUTO) TxDMAError(void) {
+    
+    flags.xsum_error = 1 ;
+    led_blink(&led_red, LED_BLINK_FAST) ;
+    
+    IFS1CLR = _IFS1_DMA1IF_MASK ;
 }

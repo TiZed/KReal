@@ -75,7 +75,7 @@ static inline void __attribute__((always_inline)) set_tail(Buffer * buffer, unsi
     buffer->tail = value ;
 }
 
-static inline void __attribute__((always_inline))  clear(Buffer * buffer) {
+static inline void __attribute__((always_inline)) clear(Buffer * buffer) {
     buffer->head = buffer->tail ;
 }
 
