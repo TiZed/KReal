@@ -144,7 +144,7 @@ static void config_spi() {
     // SPI 32-bit, slave mode with enhanced buffer
     // TX buffer not full interrupt mode
     // RX buffer not empty interrupt mode
-    SPI2CONSET = _SPI2CON_MODE32_MASK | _SPI2CON_CKE_MASK |// _SPI2CON_ENHBUF_MASK |
+    SPI2CONSET = _SPI2CON_MODE32_MASK | _SPI2CON_CKE_MASK | // _SPI2CON_ENHBUF_MASK |
                  (0b11 << _SPI2CON_STXISEL_POSITION) |
                  (0b01 << _SPI2CON_SRXISEL_POSITION);
     
@@ -248,10 +248,10 @@ void config_ints() {
     TRISDSET = BIT_0 | BIT_8 | BIT_9 | BIT_10 ;   // Set INT0-3 pinw as input
     
     // Set falling edge for EMO & Z-Level
-    INTCONSET = _INTCON_INT0EP_MASK | _INTCON_INT1EP_MASK ;
+    INTCONCLR = _INTCON_INT0EP_MASK | _INTCON_INT1EP_MASK ;
    
     // Set raising edge for motor faults & switches
-    INTCONCLR = _INTCON_INT2EP_MASK | _INTCON_INT3EP_MASK ;
+    INTCONSET = _INTCON_INT2EP_MASK | _INTCON_INT3EP_MASK ;
     
     // Clear all pending external interrupts
     IFS0CLR = _IFS0_INT0IF_MASK | _IFS0_INT1IF_MASK | _IFS0_INT2IF_MASK | _IFS0_INT3IF_MASK ;
@@ -361,13 +361,9 @@ int main(void) {
     clear(&rxb) ;
     clear(&txb) ;
     
-    for(i = 0 ; i < txb.size ; txb.data[i++] = 0xff00ff00) ;
-    
     config_spi() ;
     dma_setup() ;
-    
-//    SPI2BUF = flags.all ;
-    
+   
     for(i = 0 ; i < num_axes ; i++) {
         axes_mask |= axes_arr[i]->axis ;
         axis_setup(axes_arr[i]) ;
@@ -442,7 +438,6 @@ int main(void) {
                         pwm_activate(pwms[i]) ;
                 }
 
-                // TODO: checksum check here
                 chks = pop(&rxb) ;
                 if(chks != checksum) {
                     led_blink(&led_red, LED_BLINK_SLOW) ;
@@ -475,7 +470,7 @@ int main(void) {
 
                 break ;
 
-            // Update command: Update velocity and PWM, send position and flags.
+            // Update command: Update velocity and PWM.
             case CMD_UPD:
                 IEC0CLR = _IEC0_CTIE_MASK ;
               
@@ -598,9 +593,6 @@ void update_switches() {
 }
 
 void set_switch(uint32_t axis, uint32_t type) {
-    int32_t  a ;
-    int i ;
-    
     switch(axis) {
         case AXIS_X: 
             if (type == LIMIT) flags.switch_x_limit = 1 ;
@@ -648,10 +640,6 @@ void set_switch(uint32_t axis, uint32_t type) {
 
 void clr_switch(uint32_t axis, uint32_t type) {
     switch (axis) {
-        case AXIS_NONE:
-            if (type == EMO) flags.switch_emo = 0 ;
-            break ;
-            
         case AXIS_X: 
             if (type == LIMIT) flags.switch_x_limit = 0 ;
             else if (type == HOME) flags.switch_x_home = 0 ;
@@ -765,7 +753,7 @@ void __ISR(_TIMER_1_VECTOR, IPL1AUTO) RTimer(void) {
 // Blink Red LED on DMA Tx or Rx address error
 void __ISR(_DMA0_VECTOR, IPL3AUTO) RxDMAError(void) {
     
-    flags.xsum_error = 1 ;
+    flags.ucont_fault = 1 ;
     led_blink(&led_red, LED_BLINK_FAST) ;
     
     IFS1CLR = _IFS1_DMA0IF_MASK ;
@@ -773,7 +761,7 @@ void __ISR(_DMA0_VECTOR, IPL3AUTO) RxDMAError(void) {
 
 void __ISR(_DMA1_VECTOR, IPL3AUTO) TxDMAError(void) {
     
-    flags.xsum_error = 1 ;
+    flags.ucont_fault = 1 ;
     led_blink(&led_red, LED_BLINK_FAST) ;
     
     IFS1CLR = _IFS1_DMA1IF_MASK ;

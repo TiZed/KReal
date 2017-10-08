@@ -142,29 +142,29 @@ section                    address  length [bytes]      (dec)  Description
 .ctors                  0x9d001038            0x8           8   
 .dtors                  0x9d001040            0x8           8   
 .header_info            0x9d001048           0x48          72   
-.text                   0x9d001090         0x2c3c       11324  App's exec code 
-.text                   0x9d003ccc          0xeac        3756  App's exec code 
-.text                   0x9d004b78          0x90c        2316  App's exec code 
-.text                   0x9d005484          0x3cc         972  App's exec code 
-.dinit                  0x9d005850          0x370         880   
-.text                   0x9d005bc0          0x52c        1324  App's exec code 
-.reset.startup          0x9d0060ec          0x200         512   
-.text                   0x9d0062ec          0x104         260  App's exec code 
-.text.general_exception 0x9d0063f0           0xdc         220   
-.text                   0x9d0064cc          0x154         340  App's exec code 
-.text                   0x9d006620           0x78         120  App's exec code 
-.text.main_entry        0x9d006698           0x54          84   
-.text                   0x9d0066ec           0x90         144  App's exec code 
-.text._bootstrap_except 0x9d00677c           0x48          72   
-.text._general_exceptio 0x9d0067c4           0x48          72   
-.vector_default         0x9d00680c           0x48          72   
-.rodata                 0x9d006854           0x44          68  Read-only const 
-.text                   0x9d006898           0x44          68  App's exec code 
-.rodata                 0x9d0068e0           0x18          24  Read-only const 
-.text                   0x9d0068f8           0x18          24  App's exec code 
-.text._on_reset         0x9d006910            0x8           8   
-.text._on_bootstrap     0x9d006918            0x8           8   
-      Total kseg0_program_mem used  :      0x591c       22812  9.0% of 0x3e000
+.text                   0x9d001090         0x2be8       11240  App's exec code 
+.text                   0x9d003c78          0xeac        3756  App's exec code 
+.text                   0x9d004b24          0x90c        2316  App's exec code 
+.text                   0x9d005430          0x3cc         972  App's exec code 
+.dinit                  0x9d0057fc          0x370         880   
+.text                   0x9d005b6c          0x52c        1324  App's exec code 
+.reset.startup          0x9d006098          0x200         512   
+.text                   0x9d006298          0x104         260  App's exec code 
+.text.general_exception 0x9d00639c           0xdc         220   
+.text                   0x9d006478          0x154         340  App's exec code 
+.text                   0x9d0065cc           0x78         120  App's exec code 
+.text.main_entry        0x9d006644           0x54          84   
+.text                   0x9d006698           0x90         144  App's exec code 
+.text._bootstrap_except 0x9d006728           0x48          72   
+.text._general_exceptio 0x9d006770           0x48          72   
+.vector_default         0x9d0067b8           0x48          72   
+.rodata                 0x9d006800           0x44          68  Read-only const 
+.text                   0x9d006844           0x44          68  App's exec code 
+.rodata                 0x9d006888           0x18          24  Read-only const 
+.text                   0x9d0068a0           0x18          24  App's exec code 
+.text._on_reset         0x9d0068b8            0x8           8   
+.text._on_bootstrap     0x9d0068c0            0x8           8   
+      Total kseg0_program_mem used  :      0x58c8       22728  8.9% of 0x3e000
 
 kseg0 Boot-Memory Usage
 section                    address  length [bytes]      (dec)  Description
@@ -235,7 +235,7 @@ section                    address  length [bytes]      (dec)  Description
 -------                 ----------  -------------------------  -----------
          Total kseg1_boot_mem used  :           0           0  
         --------------------------------------------------------------------------
-         Total Program Memory used  :      0x5ad4       23252  9.0% of 0x3f000
+         Total Program Memory used  :      0x5a80       23168  9.0% of 0x3f000
         --------------------------------------------------------------------------
 
 
@@ -1138,21 +1138,21 @@ END GROUP
 .debug_pubnames
  *(.debug_pubnames)
 
-.debug_info     0x00000000     0x6190
+.debug_info     0x00000000     0x617c
  *(.debug_info .gnu.linkonce.wi.*)
  .debug_info    0x00000000      0x56d build/default/production/axis.o
- .debug_info    0x0000056d     0x2d39 build/default/production/kreal.o
- .debug_info    0x000032a6      0x36b build/default/production/pwm.o
- .debug_info    0x00003611      0x35f build/default/production/_ext/1398951391/cd4048b.o
- .debug_info    0x00003970      0x165 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(floatunsisf.o)
- .debug_info    0x00003ad5      0x61e /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(adddf3.o)
- .debug_info    0x000040f3      0x68f /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(divdf3.o)
- .debug_info    0x00004782      0x5f7 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(muldf3.o)
- .debug_info    0x00004d79      0x622 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(subdf3.o)
- .debug_info    0x0000539b      0x2f6 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(fixdfsi.o)
- .debug_info    0x00005691      0x3a5 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(extendsfdf2.o)
- .debug_info    0x00005a36      0x431 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(addsf3.o)
- .debug_info    0x00005e67      0x329 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(floatsisf.o)
+ .debug_info    0x0000056d     0x2d25 build/default/production/kreal.o
+ .debug_info    0x00003292      0x36b build/default/production/pwm.o
+ .debug_info    0x000035fd      0x35f build/default/production/_ext/1398951391/cd4048b.o
+ .debug_info    0x0000395c      0x165 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(floatunsisf.o)
+ .debug_info    0x00003ac1      0x61e /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(adddf3.o)
+ .debug_info    0x000040df      0x68f /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(divdf3.o)
+ .debug_info    0x0000476e      0x5f7 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(muldf3.o)
+ .debug_info    0x00004d65      0x622 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(subdf3.o)
+ .debug_info    0x00005387      0x2f6 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(fixdfsi.o)
+ .debug_info    0x0000567d      0x3a5 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(extendsfdf2.o)
+ .debug_info    0x00005a22      0x431 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(addsf3.o)
+ .debug_info    0x00005e53      0x329 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(floatsisf.o)
 
 .debug_abbrev   0x00000000      0xec7
  *(.debug_abbrev)
@@ -1170,21 +1170,21 @@ END GROUP
  .debug_abbrev  0x00000ce1       0xf5 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(addsf3.o)
  .debug_abbrev  0x00000dd6       0xf1 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(floatsisf.o)
 
-.debug_line     0x00000000     0x12bf
+.debug_line     0x00000000     0x12ca
  *(.debug_line)
  .debug_line    0x00000000      0x13f build/default/production/axis.o
- .debug_line    0x0000013f      0x8a5 build/default/production/kreal.o
- .debug_line    0x000009e4      0x13a build/default/production/pwm.o
- .debug_line    0x00000b1e       0xf0 build/default/production/_ext/1398951391/cd4048b.o
- .debug_line    0x00000c0e       0x97 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(floatunsisf.o)
- .debug_line    0x00000ca5       0xd6 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(adddf3.o)
- .debug_line    0x00000d7b       0xce /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(divdf3.o)
- .debug_line    0x00000e49       0xc7 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(muldf3.o)
- .debug_line    0x00000f10       0xd2 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(subdf3.o)
- .debug_line    0x00000fe2       0xb5 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(fixdfsi.o)
- .debug_line    0x00001097       0xba /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(extendsfdf2.o)
- .debug_line    0x00001151       0xb6 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(addsf3.o)
- .debug_line    0x00001207       0xb8 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(floatsisf.o)
+ .debug_line    0x0000013f      0x8b0 build/default/production/kreal.o
+ .debug_line    0x000009ef      0x13a build/default/production/pwm.o
+ .debug_line    0x00000b29       0xf0 build/default/production/_ext/1398951391/cd4048b.o
+ .debug_line    0x00000c19       0x97 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(floatunsisf.o)
+ .debug_line    0x00000cb0       0xd6 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(adddf3.o)
+ .debug_line    0x00000d86       0xce /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(divdf3.o)
+ .debug_line    0x00000e54       0xc7 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(muldf3.o)
+ .debug_line    0x00000f1b       0xd2 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(subdf3.o)
+ .debug_line    0x00000fed       0xb5 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(fixdfsi.o)
+ .debug_line    0x000010a2       0xba /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(extendsfdf2.o)
+ .debug_line    0x0000115c       0xb6 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(addsf3.o)
+ .debug_line    0x00001212       0xb8 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(floatsisf.o)
 
 .debug_frame    0x00000000      0x54c
  *(.debug_frame)
@@ -1218,21 +1218,21 @@ END GROUP
  .debug_str     0x0000002c        0x0 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(addsf3.o)
  .debug_str     0x0000002c        0x0 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(floatsisf.o)
 
-.debug_loc      0x00000000     0x4f62
+.debug_loc      0x00000000     0x4f09
  *(.debug_loc)
  .debug_loc     0x00000000       0xad build/default/production/axis.o
- .debug_loc     0x000000ad      0xaff build/default/production/kreal.o
- .debug_loc     0x00000bac       0xd6 build/default/production/pwm.o
- .debug_loc     0x00000c82       0x3a build/default/production/_ext/1398951391/cd4048b.o
- .debug_loc     0x00000cbc       0x8a /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(floatunsisf.o)
- .debug_loc     0x00000d46     0x1092 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(adddf3.o)
- .debug_loc     0x00001dd8      0xc81 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(divdf3.o)
- .debug_loc     0x00002a59      0x8ad /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(muldf3.o)
- .debug_loc     0x00003306     0x10a8 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(subdf3.o)
- .debug_loc     0x000043ae       0xb8 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(fixdfsi.o)
- .debug_loc     0x00004466      0x1b5 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(extendsfdf2.o)
- .debug_loc     0x0000461b      0x775 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(addsf3.o)
- .debug_loc     0x00004d90      0x1d2 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(floatsisf.o)
+ .debug_loc     0x000000ad      0xaa6 build/default/production/kreal.o
+ .debug_loc     0x00000b53       0xd6 build/default/production/pwm.o
+ .debug_loc     0x00000c29       0x3a build/default/production/_ext/1398951391/cd4048b.o
+ .debug_loc     0x00000c63       0x8a /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(floatunsisf.o)
+ .debug_loc     0x00000ced     0x1092 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(adddf3.o)
+ .debug_loc     0x00001d7f      0xc81 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(divdf3.o)
+ .debug_loc     0x00002a00      0x8ad /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(muldf3.o)
+ .debug_loc     0x000032ad     0x10a8 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(subdf3.o)
+ .debug_loc     0x00004355       0xb8 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(fixdfsi.o)
+ .debug_loc     0x0000440d      0x1b5 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(extendsfdf2.o)
+ .debug_loc     0x000045c2      0x775 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(addsf3.o)
+ .debug_loc     0x00004d37      0x1d2 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(floatsisf.o)
 
 .debug_macinfo
  *(.debug_macinfo)
@@ -1252,16 +1252,16 @@ END GROUP
 .debug_pubtypes
  *(.debug_pubtypes)
 
-.debug_ranges   0x00000000      0x970
+.debug_ranges   0x00000000      0x978
  *(.debug_ranges)
- .debug_ranges  0x00000000      0x4e0 build/default/production/kreal.o
- .debug_ranges  0x000004e0      0x150 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(adddf3.o)
- .debug_ranges  0x00000630       0x60 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(divdf3.o)
- .debug_ranges  0x00000690       0xc0 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(muldf3.o)
- .debug_ranges  0x00000750      0x130 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(subdf3.o)
- .debug_ranges  0x00000880       0x18 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(extendsfdf2.o)
- .debug_ranges  0x00000898       0xa0 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(addsf3.o)
- .debug_ranges  0x00000938       0x38 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(floatsisf.o)
+ .debug_ranges  0x00000000      0x4e8 build/default/production/kreal.o
+ .debug_ranges  0x000004e8      0x150 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(adddf3.o)
+ .debug_ranges  0x00000638       0x60 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(divdf3.o)
+ .debug_ranges  0x00000698       0xc0 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(muldf3.o)
+ .debug_ranges  0x00000758      0x130 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(subdf3.o)
+ .debug_ranges  0x00000888       0x18 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(extendsfdf2.o)
+ .debug_ranges  0x000008a0       0xa0 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(addsf3.o)
+ .debug_ranges  0x00000940       0x38 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(floatsisf.o)
 
 .gnu.attributes
                 0x00000000       0x10
@@ -1841,8 +1841,8 @@ LOAD data_init
 .data           0x00000000        0x0
  .data          0x00000000        0x0 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/../../../../pic32mx/lib/./proc/32MX775F256H/crt0_mips32r2.o
 
-.text           0x9d001090     0x2c3c
- .text          0x9d001090     0x245c build/default/production/kreal.o
+.text           0x9d001090     0x2be8
+ .text          0x9d001090     0x2408 build/default/production/kreal.o
                 0x9d001090                enableInterrupts
                 0x9d00109c                disableInterrupts
                 0x9d0010a8                restoreInterrupts
@@ -1856,139 +1856,139 @@ LOAD data_init
                 0x9d0012a4                config_ints
                 0x9d0012f8                setup
                 0x9d00140c                main
-                0x9d0022b8                all_stop
-                0x9d002418                update_switches
-                0x9d002490                set_switch
-                0x9d002820                clr_switch
-                0x9d002bcc                EmoHandler
-                0x9d002d18                ZLevelHandler
-                0x9d002dac                MotorFaultHandler
-                0x9d002f58                SwitchHandler
-                0x9d0030ec                CoreTimerHandler
-                0x9d00324c                RTimer
-                0x9d00338c                RxDMAError
-                0x9d00343c                TxDMAError
- .text          0x9d0034ec      0x7e0 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(subdf3.o)
-                0x9d0034ec                __subdf3
+                0x9d002280                all_stop
+                0x9d0023e0                update_switches
+                0x9d002458                set_switch
+                0x9d0027e8                clr_switch
+                0x9d002b78                EmoHandler
+                0x9d002cc4                ZLevelHandler
+                0x9d002d58                MotorFaultHandler
+                0x9d002f04                SwitchHandler
+                0x9d003098                CoreTimerHandler
+                0x9d0031f8                RTimer
+                0x9d003338                RxDMAError
+                0x9d0033e8                TxDMAError
+ .text          0x9d003498      0x7e0 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(subdf3.o)
+                0x9d003498                __subdf3
 
-.text           0x9d003ccc      0xeac
- .text          0x9d003ccc      0x7c8 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(adddf3.o)
-                0x9d003ccc                __adddf3
- .text          0x9d004494      0x6e4 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(divdf3.o)
-                0x9d004494                __divdf3
+.text           0x9d003c78      0xeac
+ .text          0x9d003c78      0x7c8 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(adddf3.o)
+                0x9d003c78                __adddf3
+ .text          0x9d004440      0x6e4 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(divdf3.o)
+                0x9d004440                __divdf3
 
-.text           0x9d004b78      0x90c
- .text          0x9d004b78      0x49c /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(muldf3.o)
-                0x9d004b78                __muldf3
- .text          0x9d005014      0x470 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(addsf3.o)
-                0x9d005014                __addsf3
+.text           0x9d004b24      0x90c
+ .text          0x9d004b24      0x49c /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(muldf3.o)
+                0x9d004b24                __muldf3
+ .text          0x9d004fc0      0x470 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(addsf3.o)
+                0x9d004fc0                __addsf3
 
-.text           0x9d005484      0x3cc
- .text          0x9d005484      0x3cc build/default/production/axis.o
-                0x9d005484                stepgen
-                0x9d005644                axis_activate
-                0x9d005688                axis_deactivate
-                0x9d0056a4                axis_setup
-                0x9d0056dc                get_axis_ind
+.text           0x9d005430      0x3cc
+ .text          0x9d005430      0x3cc build/default/production/axis.o
+                0x9d005430                stepgen
+                0x9d0055f0                axis_activate
+                0x9d005634                axis_deactivate
+                0x9d005650                axis_setup
+                0x9d005688                get_axis_ind
 
-.dinit          0x9d005850      0x370
- .dinit         0x9d005850      0x370 data_init
+.dinit          0x9d0057fc      0x370
+ .dinit         0x9d0057fc      0x370 data_init
 
-.text           0x9d005bc0      0x52c
- .text          0x9d005bc0      0x308 build/default/production/pwm.o
-                0x9d005bc0                pwm_activate
-                0x9d005db4                pwm_set_duty
-                0x9d005eb0                pwm_deactivate
- .text          0x9d005ec8      0x224 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/crtbegin.o
+.text           0x9d005b6c      0x52c
+ .text          0x9d005b6c      0x308 build/default/production/pwm.o
+                0x9d005b6c                pwm_activate
+                0x9d005d60                pwm_set_duty
+                0x9d005e5c                pwm_deactivate
+ .text          0x9d005e74      0x224 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/crtbegin.o
 
-.reset.startup  0x9d0060ec      0x200
+.reset.startup  0x9d006098      0x200
  .reset.startup
-                0x9d0060ec      0x200 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/../../../../pic32mx/lib/./proc/32MX775F256H/crt0_mips32r2.o
+                0x9d006098      0x200 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/../../../../pic32mx/lib/./proc/32MX775F256H/crt0_mips32r2.o
 
-.text           0x9d0062ec      0x104
- .text          0x9d0062ec      0x104 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(floatsisf.o)
-                0x9d0062ec                __floatsisf
+.text           0x9d006298      0x104
+ .text          0x9d006298      0x104 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(floatsisf.o)
+                0x9d006298                __floatsisf
 
 .text.general_exception
-                0x9d0063f0       0xdc
+                0x9d00639c       0xdc
  .text.general_exception
-                0x9d0063f0       0xdc /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/../../../../pic32mx/lib/libpic32.a(general-exception.o)
-                0x9d0063f0                _general_exception_context
+                0x9d00639c       0xdc /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/../../../../pic32mx/lib/libpic32.a(general-exception.o)
+                0x9d00639c                _general_exception_context
 
-.text           0x9d0064cc      0x154
- .text          0x9d0064cc       0xb0 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(extendsfdf2.o)
-                0x9d0064cc                __extendsfdf2
- .text          0x9d00657c       0xa4 build/default/production/_ext/1398951391/cd4048b.o
-                0x9d00657c                setup_logic
-                0x9d0065f8                enable_logic
-                0x9d00660c                disable_logic
+.text           0x9d006478      0x154
+ .text          0x9d006478       0xb0 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(extendsfdf2.o)
+                0x9d006478                __extendsfdf2
+ .text          0x9d006528       0xa4 build/default/production/_ext/1398951391/cd4048b.o
+                0x9d006528                setup_logic
+                0x9d0065a4                enable_logic
+                0x9d0065b8                disable_logic
 
-.text           0x9d006620       0x78
- .text          0x9d006620       0x78 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(fixdfsi.o)
-                0x9d006620                __fixdfsi
+.text           0x9d0065cc       0x78
+ .text          0x9d0065cc       0x78 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(fixdfsi.o)
+                0x9d0065cc                __fixdfsi
 
 .text.main_entry
-                0x9d006698       0x54
+                0x9d006644       0x54
  .text.main_entry
-                0x9d006698       0x54 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/../../../../pic32mx/lib/./proc/32MX775F256H/crt0_mips32r2.o
-                0x9d0066cc                __crt0_exit
+                0x9d006644       0x54 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/../../../../pic32mx/lib/./proc/32MX775F256H/crt0_mips32r2.o
+                0x9d006678                __crt0_exit
 
-.text           0x9d0066ec       0x90
- .text          0x9d0066ec       0x48 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/crtend.o
- .text          0x9d006734       0x48 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(floatunsisf.o)
-                0x9d006734                __floatunsisf
+.text           0x9d006698       0x90
+ .text          0x9d006698       0x48 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/crtend.o
+ .text          0x9d0066e0       0x48 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/libgcc.a(floatunsisf.o)
+                0x9d0066e0                __floatunsisf
 
 .text._bootstrap_exception_handler
-                0x9d00677c       0x48
+                0x9d006728       0x48
  .text._bootstrap_exception_handler
-                0x9d00677c       0x48 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/../../../../pic32mx/lib/libpic32.a(default-bootstrap-exception-handler.o)
-                0x9d00677c                _bootstrap_exception_handler
+                0x9d006728       0x48 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/../../../../pic32mx/lib/libpic32.a(default-bootstrap-exception-handler.o)
+                0x9d006728                _bootstrap_exception_handler
 
 .text._general_exception_handler
-                0x9d0067c4       0x48
+                0x9d006770       0x48
  .text._general_exception_handler
-                0x9d0067c4       0x48 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/../../../../pic32mx/lib/libpic32.a(default-general-exception-handler.o)
-                0x9d0067c4                _general_exception_handler
+                0x9d006770       0x48 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/../../../../pic32mx/lib/libpic32.a(default-general-exception-handler.o)
+                0x9d006770                _general_exception_handler
 
 .vector_default
-                0x9d00680c       0x48
+                0x9d0067b8       0x48
  .vector_default
-                0x9d00680c       0x48 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/../../../../pic32mx/lib/libpic32.a(defaultinterrupt.o)
-                0x9d00680c                _DefaultInterrupt
+                0x9d0067b8       0x48 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/../../../../pic32mx/lib/libpic32.a(defaultinterrupt.o)
+                0x9d0067b8                _DefaultInterrupt
 
-.rodata         0x9d006854       0x44
- .rodata        0x9d006854       0x44 build/default/production/kreal.o
-                0x9d006854                axes_arr
-                0x9d006860                switches
-                0x9d006878                pwms
-                0x9d006880                leds
-                0x9d006888                num_axes
-                0x9d00688c                num_switches
-                0x9d006890                num_pwms
-                0x9d006894                num_leds
+.rodata         0x9d006800       0x44
+ .rodata        0x9d006800       0x44 build/default/production/kreal.o
+                0x9d006800                axes_arr
+                0x9d00680c                switches
+                0x9d006824                pwms
+                0x9d00682c                leds
+                0x9d006834                num_axes
+                0x9d006838                num_switches
+                0x9d00683c                num_pwms
+                0x9d006840                num_leds
 
-.text           0x9d006898       0x44
- .text          0x9d006898       0x44 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/../../../../pic32mx/lib/pic32_software_reset.o
-                0x9d006898                __pic32_software_reset
+.text           0x9d006844       0x44
+ .text          0x9d006844       0x44 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/../../../../pic32mx/lib/pic32_software_reset.o
+                0x9d006844                __pic32_software_reset
 
-.rodata         0x9d0068e0       0x18
- .rodata        0x9d0068e0       0x18 build/default/production/pwm.o
+.rodata         0x9d006888       0x18
+ .rodata        0x9d006888       0x18 build/default/production/pwm.o
 
-.text           0x9d0068f8       0x18
- .text          0x9d0068f8       0x18 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/../../../../pic32mx/lib/libpic32.a(default-nmi-handler.o)
-                0x9d0068f8                _nmi_handler
+.text           0x9d0068a0       0x18
+ .text          0x9d0068a0       0x18 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/../../../../pic32mx/lib/libpic32.a(default-nmi-handler.o)
+                0x9d0068a0                _nmi_handler
 
 .text._on_reset
-                0x9d006910        0x8
+                0x9d0068b8        0x8
  .text._on_reset
-                0x9d006910        0x8 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/../../../../pic32mx/lib/libpic32.a(default-on-reset.o)
-                0x9d006910                _on_reset
+                0x9d0068b8        0x8 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/../../../../pic32mx/lib/libpic32.a(default-on-reset.o)
+                0x9d0068b8                _on_reset
 
 .text._on_bootstrap
-                0x9d006918        0x8
+                0x9d0068c0        0x8
  .text._on_bootstrap
-                0x9d006918        0x8 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/../../../../pic32mx/lib/libpic32.a(default-on-bootstrap.o)
-                0x9d006918                _on_bootstrap
+                0x9d0068c0        0x8 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/../../../../pic32mx/lib/libpic32.a(default-on-bootstrap.o)
+                0x9d0068c0                _on_bootstrap
 
 .text           0x00000000        0x0
  .text          0x00000000        0x0 /home/tized/.arduino15/packages/chipKIT/tools/pic32-tools/1.43-pic32gcc/bin/bin/../../lib/gcc/pic32mx/4.8.3/../../../../pic32mx/lib/libpic32.a(defaultinterrupt.o)
