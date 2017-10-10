@@ -245,7 +245,7 @@ void config_switches() {
 void config_ints() {
     IEC0CLR = _IEC0_INT0IE_MASK | _IEC0_INT1IE_MASK | _IEC0_INT2IE_MASK | _IEC0_INT3IE_MASK ;
     
-    TRISDSET = BIT_0 | BIT_8 | BIT_9 | BIT_10 ;   // Set INT0-3 pinw as input
+    TRISDSET = BIT_0 | BIT_8 | BIT_9 | BIT_10 ;   // Set INT0-3 pins as input
     
     // Set falling edge for EMO & Z-Level
     INTCONCLR = _INTCON_INT0EP_MASK | _INTCON_INT1EP_MASK ;
@@ -363,7 +363,7 @@ int main(void) {
     
     config_spi() ;
     dma_setup() ;
-   
+
     for(i = 0 ; i < num_axes ; i++) {
         axes_mask |= axes_arr[i]->axis ;
         axis_setup(axes_arr[i]) ;

@@ -26,20 +26,23 @@
 
 // Setup the CD4048B logic IC
 void setup_logic(uint32_t mode, cd4048b_t * logic) {
+    // Define logic pins as output
     *(logic->en_tris_clr) = logic->en_pin ;
     *(logic->ka_tris_clr) = logic->ka_pin ;
     *(logic->kb_tris_clr) = logic->kb_pin ;
     *(logic->kc_tris_clr) = logic->kc_pin ;
     
+    // Drop enable pin
     *(logic->en_port_clr) = logic->en_pin ;
     
-    if(mode && 0b001) *(logic->ka_port_set) = logic->ka_pin ;
+    // Configure logic to selected mode
+    if(mode & 0b001) *(logic->ka_port_set) = logic->ka_pin ;
     else *(logic->ka_port_clr) = logic->ka_pin ;
     
-    if(mode && 0b010) *(logic->kb_port_set) = logic->kb_pin ;
+    if(mode & 0b010) *(logic->kb_port_set) = logic->kb_pin ;
     else *(logic->kb_port_clr) = logic->kb_pin ;
     
-    if(mode && 0b100) *(logic->kc_port_set) = logic->kc_pin ;
+    if(mode & 0b100) *(logic->kc_port_set) = logic->kc_pin ;
     else *(logic->kc_port_clr) = logic->kc_pin ;
 }
 
