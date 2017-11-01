@@ -68,11 +68,11 @@ static inline unsigned int __attribute__((always_inline)) pop_wait(Buffer * buff
 }
 
 static inline void __attribute__((always_inline)) set_head(Buffer * buffer, unsigned int value) {
-    buffer->head = value ;
+    buffer->head = value % buffer->size ; 
 }
 
 static inline void __attribute__((always_inline)) set_tail(Buffer * buffer, unsigned int value) {
-    buffer->tail = value ;
+    buffer->tail = value % buffer->size ; 
 }
 
 static inline void __attribute__((always_inline)) clear(Buffer * buffer) {

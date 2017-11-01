@@ -29,7 +29,7 @@
  * SPI CLK  - SCLK2/RG6
  * SPI SS   - SS2/RG9
  * 
- * UART1 RX - U2RX/RF4
+ * UART1 RX - U2RX/RF4 - Used as program signal at startup
  * UART1 TX - U2TX/RF5
  * 
  * Logic:
@@ -123,7 +123,6 @@ BUFFER(txb, BUFFER_SIZE) ;
 
 static uint32_t checksum = 0 ;
 static uint32_t cmd = CMD_NUL ;
-static uint32_t pos_send_count = 0 ;
 static uint32_t spi_cs_last = 0 ;
 static uint32_t spi_cs_current = 0 ;
 
@@ -342,7 +341,7 @@ void setup(void) {
 
 int main(void) {
     unsigned int base_freq, int_store, state, update_rate ;
-    int i, axis ;
+    int i, axis, padding ;
     unsigned int chks ;
     int32_t * a ;
     int64_t pos ;
@@ -445,7 +444,8 @@ int main(void) {
                     base_freq = 0 ;
                 }
 
-                pos_send_count = 2 * num_active_axes + 2 ;
+                padding = 1 + num_active_axes - num_active_pwm ;
+                padding = (padding >= 0) ? padding : 0 ;
 
                 // Set core timer compare ticks to selected pulse
                 // generation base frequency
@@ -492,6 +492,10 @@ int main(void) {
                 }
                 else
                     IEC0SET = _IEC0_CTIE_MASK ;
+                
+                // Clear padding that makes sure that tx == rx data
+                for(i = 0 ; i < padding ; i++) pop(&rxb) ;
+                
                 break ;
 
             // Stop command: Deactivate all active axes and PWM channels
@@ -517,8 +521,8 @@ int main(void) {
                 
                 while(DCH0CON & _DCH0CON_CHBUSY_MASK || DCH1CON & _DCH1CON_CHBUSY_MASK) ;
                 
-                set_head(&rxb, DCH0DPTR >> 2) ;      // Realign RX buffer head
-                set_tail(&txb, DCH1SPTR >> 2) ;      // Realign TX buffer tail
+                set_head(&rxb, 1 + DCH0DPTR >> 2) ;      // Realign RX buffer head
+                set_tail(&txb, 1 + DCH1SPTR >> 2) ;      // Realign TX buffer tail
                 
                 cmd = pop(&rxb) ;                   // Get new command
                 
