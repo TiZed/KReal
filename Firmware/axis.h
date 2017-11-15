@@ -66,7 +66,7 @@ typedef enum {
 
 typedef struct {
     uint32_t axis ;
-    int32_t velocity ;
+    int64_t velocity ;
     int32_t old_dir ;
     int64_t position ;
     int64_t old_position ;

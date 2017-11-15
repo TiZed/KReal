@@ -4,6 +4,7 @@
 void stepgen(axis_t * const* axes, int32_t * active_axes) {
     axis_t * axis ;
     int32_t * a ;
+    const static int64_t step_mask = (1LL << PICKOFF) ;
     
     for (a = active_axes ; *a != -1 ; a++) {
         axis = axes[*a] ;
@@ -40,7 +41,7 @@ void stepgen(axis_t * const* axes, int32_t * active_axes) {
         }
 
         if(axis->step_state == STEP_WAIT) {
-            if((axis->position ^ axis->old_position) & (1LL << PICKOFF)) {
+            if((axis->position ^ axis->old_position) & step_mask) {
                 *(axis->port_set) = axis->step_pin ; 
 
                 axis->old_position = axis->position ;
@@ -66,9 +67,6 @@ void stepgen(axis_t * const* axes, int32_t * active_axes) {
 }
 
 void axis_activate(axis_t * const axis) {
-    axis->position = 0 ;
-    axis->old_position = 0 ;
-    *(axis->tris_clr) = axis->en_pin | axis->dir_pin | axis->step_pin ;
     *(axis->port_set) = axis->en_pin ;  
 }
 
@@ -77,6 +75,10 @@ void axis_deactivate(axis_t * const axis) {
 }
 
 void axis_setup(axis_t * const axis) {
+    axis->position = 0 ;
+    axis->old_position = 0 ;
+    axis->velocity = 0 ;
+    
     *(axis->port_clr) = axis->en_pin | axis->dir_pin | axis->step_pin ; 
     *(axis->tris_clr) = axis->en_pin | axis->dir_pin | axis->step_pin ;
     *(axis->fault_tris_set) = axis->fault_pin ;

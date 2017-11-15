@@ -193,6 +193,10 @@ static void dma_setup() {
     DCH0INTCLR = 0x00ff00ff ;           // Clear all Ch. 0 events
     DCH0INTSET = _DCH0INT_CHERIE_MASK ; // Enable Address error interrupt
     
+    // Swap received bytes
+    DCRCCON = 0 ;
+    DCRCCON = 0x0 | _DCRCCON_CRCEN_MASK | _DCRCCON_WBO_MASK | (0b01 << _DCRCCON_BYTO_POSITION) ; 
+    
     // Configure DMA Channel 1 for SPI Tx
     
     // Disable ch. 1 set priority 3, automatic open
@@ -345,6 +349,7 @@ int main(void) {
     unsigned int chks ;
     int32_t * a ;
     int64_t pos ;
+    uint32_t enables ;
     
     setup() ;
     
@@ -424,7 +429,8 @@ int main(void) {
                     checksum ^= axes_arr[axis]->dir_hold ;
 
                     // Activate axis (rise enable)
-                    axis_activate(axes_arr[axis]) ;
+//                    axis_activate(axes_arr[axis]) ;
+                    axis_setup(axes_arr[axis]) ;
                 }
 
                 active_axes[i] = -1 ;
@@ -473,10 +479,19 @@ int main(void) {
             // Update command: Update velocity and PWM.
             case CMD_UPD:
                 IEC0CLR = _IEC0_CTIE_MASK ;
+                
+                enables = pop(&rxb) ;
+                checksum ^= enables ;
               
                 for (a = active_axes ; *a != -1 ; a++) {
                     axes_arr[*a]->velocity = pop(&rxb) ; 
                     checksum ^= axes_arr[*a]->velocity ;
+                    axes_arr[*a]->velocity <<= 32 ;
+                    axes_arr[*a]->velocity |= pop(&rxb) ; 
+                    checksum ^= axes_arr[*a]->velocity ;
+                    
+                    if (enables & axes_arr[*a]->axis) axis_activate(axes_arr[*a]) ;
+                    else axis_deactivate(axes_arr[*a]) ;
                 }
                 
                 for (i = 0 ; i < num_active_pwm ; i++) {
