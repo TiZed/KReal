@@ -1,1 +1,1 @@
-C:\Programs\mpide-0150\hardware\tools\avr\bin\avrdude.exe -p 32MX320F128H -P COM9 -v -C C:\Programs\mpide-0150\hardware\tools\avr\etc\avrdude.conf -c stk500v2 -b 115200 -D -U flash:w:dist\default\production\firmware.production.hex
+pic32prog.exe -d COM5 dist\default\production\firmware.production.hex

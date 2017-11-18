@@ -23,12 +23,12 @@ void stepgen(axis_t * const* axes, int32_t * active_axes) {
             // Positive direction
             if(axis->velocity >= 0) {
                 *(axis->port_set) = axis->dir_pin ;
-                axis->old_dir = 1 ;
+                axis->dir = 1 ;
             }
             // Negative direction
             else {
                 *(axis->port_clr) = axis->dir_pin ;
-                axis->old_dir = -1 ;
+                axis->dir = -1 ;
             }
 
             axis->step_state = DIR_SETUP ;
@@ -60,7 +60,7 @@ void stepgen(axis_t * const* axes, int32_t * active_axes) {
         }
 
         if(axis->step_state == STEP_DOWN && axis->step_counter == 0) {
-            if((axis->old_dir * axis->velocity) < 0) axis->step_state = DIR_HOLD ;
+            if((axis->dir * axis->velocity) < 0) axis->step_state = DIR_HOLD ;
             else axis->step_state = STEP_WAIT ;
         }
     }

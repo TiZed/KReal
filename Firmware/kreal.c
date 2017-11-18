@@ -428,8 +428,6 @@ int main(void) {
                     axes_arr[axis]->dir_hold = pop(&rxb) ;
                     checksum ^= axes_arr[axis]->dir_hold ;
 
-                    // Activate axis (rise enable)
-//                    axis_activate(axes_arr[axis]) ;
                     axis_setup(axes_arr[axis]) ;
                 }
 
@@ -450,7 +448,7 @@ int main(void) {
                     base_freq = 0 ;
                 }
 
-                padding = 1 + num_active_axes - num_active_pwm ;
+                padding = 0 ;
                 padding = (padding >= 0) ? padding : 0 ;
 
                 // Set core timer compare ticks to selected pulse
