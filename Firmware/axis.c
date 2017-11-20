@@ -16,7 +16,7 @@ void stepgen(axis_t * const* axes, int32_t * active_axes) {
         if(axis->dir_counter > 0) axis->dir_counter-- ;
 
         // Increment position, if not waiting on dir hold
-        if(axis->step_state != DIR_HOLD) axis->position += axis->velocity ;
+        if((axis->step_state != DIR_HOLD) && axis->enable) axis->position += axis->velocity ;
 
         // If waited for dir hold and timer elapsed, release stepping
         else if(axis->step_state == DIR_HOLD && axis->dir_counter == 0) {
@@ -68,10 +68,12 @@ void stepgen(axis_t * const* axes, int32_t * active_axes) {
 
 void axis_activate(axis_t * const axis) {
     *(axis->port_set) = axis->en_pin ;  
+    axis->enable = 1 ;
 }
 
 void axis_deactivate(axis_t * const axis) {
     *(axis->port_clr) = axis->en_pin | axis->step_pin ; 
+    axis->enable = 0 ;
 }
 
 void axis_setup(axis_t * const axis) {
