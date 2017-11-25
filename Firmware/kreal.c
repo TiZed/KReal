@@ -64,9 +64,9 @@
 
 //         Port                      Fault
 //     Axis      EN     Dir     Step  Port  Pin
-ADD_AXIS(X, B, BIT_6 ,  BIT_5,  BIT_4, E, BIT_0) ;  
-ADD_AXIS(Y, B, BIT_9 ,  BIT_8,  BIT_7, E, BIT_1) ;  
-ADD_AXIS(Z, B, BIT_12, BIT_11, BIT_10, E, BIT_2) ;   
+ADD_AXIS(X, 0, B, BIT_6 ,  BIT_5,  BIT_4, E, BIT_0) ;  
+ADD_AXIS(Y, 0, B, BIT_9 ,  BIT_8,  BIT_7, E, BIT_1) ;  
+ADD_AXIS(Z, 0, B, BIT_12, BIT_11, BIT_10, E, BIT_2) ;   
 // ADD_AXIS(A, B, BIT_15, BIT_14, BIT_13, E, BIT_3) ;
 
 axis_t * const axes_arr[] = {&axis_X, &axis_Y, &axis_Z} ; // &axis_A

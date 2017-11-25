@@ -22,12 +22,14 @@ void stepgen(axis_t * const* axes, int32_t * active_axes) {
         else if(axis->step_state == DIR_HOLD && axis->dir_counter == 0) {
             // Positive direction
             if(axis->velocity >= 0) {
-                *(axis->port_set) = axis->dir_pin ;
+                if(axis->inverse) *(axis->port_set) = axis->dir_pin ;
+                else *(axis->port_clr) = axis->dir_pin ;
                 axis->dir = 1 ;
             }
             // Negative direction
             else {
-                *(axis->port_clr) = axis->dir_pin ;
+                if(axis->inverse) *(axis->port_clr) = axis->dir_pin ;
+                else *(axis->port_set) = axis->dir_pin ;
                 axis->dir = -1 ;
             }
 
