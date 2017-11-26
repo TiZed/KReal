@@ -73,6 +73,8 @@ void pwm_set_duty(pwm_t * const pwm) {
         *(pwm->oc_rs) = (long)((1.0 - pwm->duty.flt / 100.0) * (float)pwm->pr + 0.5) ;
     else 
         *(pwm->oc_rs) = (long)((pwm->duty.flt / 100.0) * (float)pwm->pr + 0.5) ;
+    
+    pwm->old_duty.bin = pwm->duty.bin ;
 }
 
 

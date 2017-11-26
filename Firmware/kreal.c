@@ -509,6 +509,11 @@ int main(void) {
                 // Clear padding that makes sure that tx == rx data
                 for(i = 0 ; i < padding ; i++) pop(&rxb) ;
                 
+                for (i = 0 ; i < num_active_pwm ; i++) {
+                    if (pwms[i]->duty.bin != pwms[i]->old_duty.bin)
+                        pwm_set_duty(pwms) ;
+                }
+                
                 break ;
 
             // Stop command: Deactivate all active axes and PWM channels

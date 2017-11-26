@@ -34,14 +34,16 @@ typedef struct {
     unsigned int pr ;
     unsigned int inverse ;
     duty_cycle_t duty ;
+    duty_cycle_t old_duty ;
 } pwm_t ;
 
 #define ADD_PWM(PWM, OC, TIMER, INVERSE) \
-    pwm_t pwm_ ## PWM = {&OC ## CON, &OC ## R, &OC ## RS, 0, TIMER, 0, 0, 0}
+    pwm_t pwm_ ## PWM = {&OC ## CON, &OC ## R, &OC ## RS, 0, TIMER, 0, 0, 0, 0}
 
 void pwm_activate(pwm_t * const pwm) ;
 void pwm_set_duty(pwm_t * const pwm) ;
 void pwm_deactivate(pwm_t * const pwm) ;
+void pwm_reverse(pwm_t * const pwm) ;
 
 
 #ifdef	__cplusplus
