@@ -476,16 +476,16 @@ int main(void) {
 
             // Update command: Update velocity and PWM.
             case CMD_UPD:
-                IEC0CLR = _IEC0_CTIE_MASK ;
-                
                 enables = pop(&rxb) ;
                 checksum ^= enables ;
               
                 for (a = active_axes ; *a != -1 ; a++) {
+                    IEC0CLR = _IEC0_CTIE_MASK ;
                     axes_arr[*a]->velocity = pop(&rxb) ; 
                     checksum ^= axes_arr[*a]->velocity ;
                     axes_arr[*a]->velocity <<= 32 ;
                     axes_arr[*a]->velocity |= pop(&rxb) ; 
+                    IEC0SET = _IEC0_CTIE_MASK ;
                     checksum ^= axes_arr[*a]->velocity ;
                     
                     if (enables & axes_arr[*a]->axis) axis_activate(axes_arr[*a]) ;
@@ -495,6 +495,9 @@ int main(void) {
                 for (i = 0 ; i < num_active_pwm ; i++) {
                     pwms[i]->duty.bin = pop(&rxb) ;
                     checksum ^= pwms[i]->duty.bin ;
+                    
+                    if (pwms[i]->duty.bin != pwms[i]->old_duty.bin)
+                        pwm_set_duty(pwms[i]) ;
                 }
 
                 chks = pop(&rxb) ;
@@ -503,16 +506,9 @@ int main(void) {
                     flags.xsum_error = 1 ;
                     all_stop() ;
                 }
-                else
-                    IEC0SET = _IEC0_CTIE_MASK ;
                 
                 // Clear padding that makes sure that tx == rx data
                 for(i = 0 ; i < padding ; i++) pop(&rxb) ;
-                
-                for (i = 0 ; i < num_active_pwm ; i++) {
-                    if (pwms[i]->duty.bin != pwms[i]->old_duty.bin)
-                        pwm_set_duty(pwms) ;
-                }
                 
                 break ;
 
@@ -572,6 +568,8 @@ int main(void) {
                         push(&txb, pos) ;
                         chks ^= pos ;
                     }
+                    
+                    for (i = 0 ; i < num_active_pwm ; i++) push(&txb, 0x0) ;
                     
                     // Place checksum
                     push(&txb, chks) ; 
