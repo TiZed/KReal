@@ -19,10 +19,8 @@ void pwm_activate(pwm_t * const pwm) {
     
     while (pwm->pr > MAX_PR && ps <= 256) {
        ps <<= 1 ;
-        pwm->pr = (80000000 / (ps * pwm->frequency)) - 1 ;
+       pwm->pr = (80000000 / (ps * pwm->frequency)) - 1 ;
     }
-    
-    ps >>= 1 ;
     
     switch(ps) {
         case 1:
@@ -65,6 +63,9 @@ void pwm_activate(pwm_t * const pwm) {
     pwm->pr += 1 ;
     
     *(pwm->oc_con) |= 0x8000 ;       // Enable OC on 16-bit mode
+    
+    pwm->duty.flt = 0.0 ;
+    pwm_set_duty(pwm) ;
 }
 
 
