@@ -713,7 +713,15 @@ void __ISR(_EXTERNAL_0_VECTOR, IPL4AUTO) EmoHandler(void) {
 
 // Z-level interrupt, just raise the flag
 void __ISR(_EXTERNAL_1_VECTOR, IPL4AUTO) ZLevelHandler(void) {
-    flags.z_level = 1 ;
+    if (INTCON & _INTCON_INT1EP_MASK) {
+        INTCONCLR = _INTCON_INT1EP_MASK ;
+        flags.z_level = 0 ; 
+    }
+    else {
+        INTCONSET = _INTCON_INT1EP_MASK ;
+        flags.z_level = 1 ;
+    }
+    
     IFS0CLR = _IFS0_INT1IF_MASK ;  // Clear Z-Level interrupt       
 }
 
