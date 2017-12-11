@@ -263,10 +263,10 @@ void config_ints() {
     IPC0SET = (4 << _IPC0_INT0IP_POSITION) | (3 << _IPC0_INT0IS_POSITION) ;
     IPC1SET = (4 << _IPC1_INT1IP_POSITION) | (0 << _IPC1_INT1IS_POSITION) ;
     IPC2SET = (4 << _IPC2_INT2IP_POSITION) | (2 << _IPC2_INT2IS_POSITION) ;
-    IPC3SET = (4 << _IPC3_INT3IP_POSITION) | (1 << _IPC3_INT3IS_POSITION) ;
+//    IPC3SET = (4 << _IPC3_INT3IP_POSITION) | (1 << _IPC3_INT3IS_POSITION) ;
      
     // Enable external interrupts
-    IEC0SET = _IEC0_INT0IE_MASK | _IEC0_INT1IE_MASK | _IEC0_INT2IE_MASK | _IEC0_INT3IE_MASK ;
+    IEC0SET = _IEC0_INT0IE_MASK | _IEC0_INT1IE_MASK | _IEC0_INT2IE_MASK ; //  | _IEC0_INT3IE_MASK ;
 }
 
 void setup(void) {
@@ -607,7 +607,9 @@ void update_switches() {
     for (i = 0 ; i < num_switches ; i++) {
         switches[i]->state = *(switches[i]->port) & switches[i]->pin ;
         
-        if(!switches[i]->state)
+        if(switches[i]->state)
+            set_switch(switches[i]->axis, switches[i]->type) ;
+        else
             clr_switch(switches[i]->axis, switches[i]->type) ;
     }  
 }
