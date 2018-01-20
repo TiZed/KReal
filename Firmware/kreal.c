@@ -261,12 +261,12 @@ void config_ints() {
    
     // Set external interrupts priority
     IPC0SET = (4 << _IPC0_INT0IP_POSITION) | (3 << _IPC0_INT0IS_POSITION) ;
-    IPC1SET = (4 << _IPC1_INT1IP_POSITION) | (0 << _IPC1_INT1IS_POSITION) ;
+//    IPC1SET = (4 << _IPC1_INT1IP_POSITION) | (0 << _IPC1_INT1IS_POSITION) ;
     IPC2SET = (4 << _IPC2_INT2IP_POSITION) | (2 << _IPC2_INT2IS_POSITION) ;
 //    IPC3SET = (4 << _IPC3_INT3IP_POSITION) | (1 << _IPC3_INT3IS_POSITION) ;
      
     // Enable external interrupts
-    IEC0SET = _IEC0_INT0IE_MASK | _IEC0_INT1IE_MASK | _IEC0_INT2IE_MASK ; //  | _IEC0_INT3IE_MASK ;
+    IEC0SET = _IEC0_INT0IE_MASK | _IEC0_INT2IE_MASK ; //  _IEC0_INT1IE_MASK | _IEC0_INT3IE_MASK ;
 }
 
 void setup(void) {
@@ -554,9 +554,9 @@ int main(void) {
                     clear(&txb) ;
                     
                     // Place flags of switches and errors
-                    push(&txb, flags.all) ;
                     chks = flags.all ;
-
+                    push(&txb, chks) ;
+                    
                     // Place positions of all axes
                     for (a = active_axes ; *a != -1 ; a++) {
                         IEC0CLR = _IEC0_CTIE_MASK ;  // Suspend stepgen interrupt
@@ -612,6 +612,8 @@ void update_switches() {
         else
             clr_switch(switches[i]->axis, switches[i]->type) ;
     }  
+    
+    flags.z_level = (PORTD & _PORTD_RD8_MASK) ? 0:1 ;
 }
 
 void set_switch(uint32_t axis, uint32_t type) {
@@ -715,14 +717,11 @@ void __ISR(_EXTERNAL_0_VECTOR, IPL4AUTO) EmoHandler(void) {
 
 // Z-level interrupt, just raise the flag
 void __ISR(_EXTERNAL_1_VECTOR, IPL4AUTO) ZLevelHandler(void) {
-    if (INTCON & _INTCON_INT1EP_MASK) {
-        INTCONCLR = _INTCON_INT1EP_MASK ;
-        flags.z_level = 0 ; 
-    }
-    else {
-        INTCONSET = _INTCON_INT1EP_MASK ;
-        flags.z_level = 1 ;
-    }
+    if (INTCON & _INTCON_INT1EP_MASK) flags.z_level = 0 ; 
+    else flags.z_level = 1 ;
+    
+    if (PORTD & _PORTD_RD8_MASK) INTCONCLR = _INTCON_INT1EP_MASK ;
+    else INTCONSET = _INTCON_INT1EP_MASK ; 
     
     IFS0CLR = _IFS0_INT1IF_MASK ;  // Clear Z-Level interrupt       
 }
